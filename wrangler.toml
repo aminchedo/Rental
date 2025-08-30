@@ -11,12 +11,12 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "rental-management-db"
-database_id = "rental-management-db" # Will be replaced with actual ID after D1 creation
+database_id = "0d8ca16e-3a0c-45df-ac98-dd53234e5a98"
 
 # KV Namespace for caching and sessions
 [[kv_namespaces]]
 binding = "RENTAL_KV"
-id = "rental-kv-namespace" # Will be replaced with actual ID after KV creation
+id = "ce35ad48265c4253b1b81e428dda1252"
 
 # Environment variables (non-sensitive)
 [vars]
