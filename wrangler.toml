@@ -45,12 +45,12 @@ ENVIRONMENT = "development"
 [[env.development.d1_databases]]
 binding = "DB"
 database_name = "rental-management-db"
-database_id = "rental-management-db"
+database_id = "0d8ca16e-3a0c-45df-ac98-dd53234e5a98"
 
 # KV Namespace for development
 [[env.development.kv_namespaces]]
 binding = "RENTAL_KV"
-id = "rental-kv-namespace"
+id = "ce35ad48265c4253b1b81e428dda1252"
 
 # Production configuration  
 [env.production]
@@ -63,9 +63,9 @@ ENVIRONMENT = "production"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "rental-management-db"
-database_id = "rental-management-db"
+database_id = "0d8ca16e-3a0c-45df-ac98-dd53234e5a98"
 
 # KV Namespace for production
 [[env.production.kv_namespaces]]
 binding = "RENTAL_KV"
-id = "rental-kv-namespace"
+id = "ce35ad48265c4253b1b81e428dda1252"
