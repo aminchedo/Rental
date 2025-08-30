@@ -234,6 +234,85 @@ class Database {
     `, [nationalId], callback);
   }
 
+  // Chart data operations
+  getMonthlyIncomeData(callback) {
+    const sql = `
+      SELECT 
+        strftime('%Y-%m', createdAt) as month,
+        SUM(CAST(monthlyRent as INTEGER)) as income,
+        COUNT(*) as contracts
+      FROM contracts 
+      WHERE status IN ('active', 'signed')
+      GROUP BY strftime('%Y-%m', createdAt)
+      ORDER BY month DESC
+      LIMIT 12
+    `;
+    
+    this.db.all(sql, [], (err, rows) => {
+      if (err) {
+        callback(err, null);
+        return;
+      }
+      
+      // Format data for chart display
+      const formattedData = rows.map(row => ({
+        month: this.formatPersianMonth(row.month),
+        income: parseInt(row.income) || 0,
+        contracts: row.contracts
+      })).reverse(); // Reverse to show chronological order
+      
+      callback(null, formattedData);
+    });
+  }
+
+  getContractStatusData(callback) {
+    const sql = `
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM contracts 
+      GROUP BY status
+    `;
+    
+    this.db.all(sql, [], (err, rows) => {
+      if (err) {
+        callback(err, null);
+        return;
+      }
+      
+      // Format data for pie chart with Persian labels and colors
+      const statusMap = {
+        'active': { label: 'فعال', color: '#10B981' },
+        'signed': { label: 'امضا شده', color: '#8B5CF6' },
+        'pending': { label: 'در انتظار', color: '#F59E0B' },
+        'terminated': { label: 'فسخ شده', color: '#EF4444' },
+        'expired': { label: 'منقضی شده', color: '#6B7280' }
+      };
+      
+      const formattedData = rows.map(row => ({
+        status: row.status,
+        count: row.count,
+        label: statusMap[row.status]?.label || row.status,
+        color: statusMap[row.status]?.color || '#6B7280'
+      }));
+      
+      callback(null, formattedData);
+    });
+  }
+
+  // Helper function to format month to Persian
+  formatPersianMonth(monthStr) {
+    const [year, month] = monthStr.split('-');
+    const monthNames = [
+      'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+      'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+    ];
+    
+    // Simple conversion - in a real app you'd want proper Jalali conversion
+    const monthIndex = parseInt(month) - 1;
+    return `${monthNames[monthIndex] || month} ${year}`;
+  }
+
   close() {
     if (this.db) {
       this.db.close((err) => {

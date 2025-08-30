@@ -3,6 +3,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ContractProvider } from './context/ContractContext';
+import { ThemeProvider } from './context/ThemeContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ContractFormPage from './pages/ContractFormPage';
@@ -159,7 +160,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300" dir="rtl">
       <Toaster
         position="top-center"
         reverseOrder={false}
@@ -230,13 +231,15 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <ContractProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </ContractProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ContractProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </ContractProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 
