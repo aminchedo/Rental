@@ -1,8 +1,12 @@
-// API Configuration for Cloudflare Workers
+// API Configuration for Vercel Deployment
 import axios from 'axios';
 
-// Get API URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+// Get API URL from environment variables - Vercel configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : ''
+);
 const IS_PRODUCTION = import.meta.env.VITE_ENVIRONMENT === 'production';
 
 // Create axios instance with default configuration
@@ -12,7 +16,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false, // JWT tokens instead of cookies for Workers
+  withCredentials: false, // JWT tokens instead of cookies for Vercel
 });
 
 // Request interceptor to add JWT token
