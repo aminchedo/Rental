@@ -41,9 +41,31 @@ name = "rental-management-api-dev"
 [env.development.vars]
 ENVIRONMENT = "development"
 
+# D1 Database configuration for development
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "rental-management-db"
+database_id = "rental-management-db"
+
+# KV Namespace for development
+[[env.development.kv_namespaces]]
+binding = "RENTAL_KV"
+id = "rental-kv-namespace"
+
 # Production configuration  
 [env.production]
 name = "rental-management-api"
 
 [env.production.vars]
 ENVIRONMENT = "production"
+
+# D1 Database configuration for production
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "rental-management-db"
+database_id = "rental-management-db"
+
+# KV Namespace for production
+[[env.production.kv_namespaces]]
+binding = "RENTAL_KV"
+id = "rental-kv-namespace"
