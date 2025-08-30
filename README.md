@@ -1,112 +1,231 @@
-# سیستم حرفه‌ای مدیریت اجاره‌نامه
+# 🏠 Rental Management System - Vercel Edition
 
-یک سیستم کامل و امن برای مدیریت قراردادهای اجاره با قابلیت امضای دیجیتال و احراز هویت.
+A comprehensive rental property management system built with Next.js and deployed on Vercel, featuring Persian/Farsi language support and RTL layout.
 
-## ✨ ویژگی‌های جدید (آپدیت اخیر)
+## 🚀 Features
 
-### 🆔 آپلود کارت ملی
-- قابلیت آپلود تصویر کارت ملی برای احراز هویت بهتر
-- اختیاری - در صورت عدم آپلود، شماره ملی باید در زیر امضا نوشته شود
-- پشتیبانی از فرمت‌های مختلف تصویر
-- محدودیت حجم 10 مگابایت
+- **Contract Management**: Create, sign, and manage rental contracts
+- **Tenant Portal**: Secure access for tenants to view their contracts
+- **Financial Analytics**: Income tracking and expense management
+- **Multi-channel Notifications**: Email, Telegram, and WhatsApp support
+- **Persian/RTL Interface**: Full Persian language support with RTL layout
+- **Digital Signatures**: Electronic contract signing capability
+- **Document Upload**: National ID and receipt image management
 
-### 🔒 بهبود امنیت
-- احراز هویت دوگانه با امضا و کارت ملی
-- راهنمای واضح برای کاربران
-- ذخیره امن تصاویر در سیستم
+## 🛠️ Technology Stack
 
-## 🚀 راه‌اندازی سریع
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes (Serverless)
+- **Database**: Vercel Postgres with connection pooling
+- **Authentication**: JWT-based stateless authentication
+- **Deployment**: Vercel (auto-scaling serverless)
+- **Notifications**: Resend (Email), Telegram API, Twilio (WhatsApp)
 
-### پیش‌نیازها
+## 🚀 Quick Start
+
+### Prerequisites
 - Node.js 18+ 
-- npm یا yarn
+- Vercel account
+- Git repository
 
-### نصب و راه‌اندازی
+### Installation
+
+1. **Clone and Install**
 ```bash
-# نصب همه وابستگی‌ها
-npm run install-all
-
-# اجرای سیستم (سرور + کلاینت)
-npm start
+git clone <your-repo>
+cd rental-management-vercel
+npm install
 ```
 
-### دسترسی به سیستم
-- **کلاینت React**: http://localhost:3000
-- **سرور API**: http://localhost:5001
-- **مدیر سیستم**: admin / admin (⚠️ در محیط تولید حتماً تغییر دهید)
-- **مستأجر**: شماره قرارداد + کد دسترسی
-
-## 📁 ساختار پروژه
-
-```
-rental-management-system/
-├── package.json              # اسکریپت‌های اصلی
-├── server/                   # بک‌اند Node.js
-│   ├── server.js            # سرور Express
-│   ├── contracts.csv        # دیتابیس CSV
-│   └── package.json
-├── client/                   # فرانت‌اند React
-│   ├── src/
-│   │   ├── App.tsx          # کامپوننت اصلی (با ویژگی کارت ملی)
-│   │   ├── main.tsx
-│   │   └── index.css
-│   ├── package.json
-│   └── vite.config.ts
-└── README.md
-```
-
-## 🎯 ویژگی‌های کلیدی
-
-### برای مدیران (موجر)
-- ✅ ایجاد قراردادهای جدید
-- ✅ مدیریت تمام قراردادها
-- ✅ ارسال کد دسترسی به مستأجر
-- ✅ مشاهده وضعیت امضا
-- ✅ دانلود PDF قراردادها
-- ✅ فسخ و حذف قراردادها
-
-### برای مستأجران
-- ✅ ورود با شماره قرارداد و کد دسترسی
-- ✅ بررسی جزئیات قرارداد
-- ✅ آپلود امضای دیجیتال
-- ✅ **جدید**: آپلود تصویر کارت ملی (اختیاری)
-- ✅ امضای امن قرارداد
-- ✅ دریافت PDF امضا شده
-
-## 🔐 امنیت
-
-- احراز هویت دوگانه
-- کدهای دسترسی یکتا
-- ذخیره امن داده‌ها در CSV
-- محدودیت دسترسی بر اساس نقش
-- **جدید**: احراز هویت با کارت ملی
-
-## 📱 واکنش‌گرا
-
-- طراحی موبایل فرست
-- رابط کاربری فارسی
-- پشتیبانی از تمام مرورگرها
-- تجربه کاربری بهینه
-
-## 🛠 توسعه
-
-### اجرای محیط توسعه
+2. **Environment Setup**
 ```bash
-# سرور (پورت 5001)
-cd server && npm start
-
-# کلاینت (پورت 3000)  
-cd client && npm start
+cp .env.local.example .env.local
+# Edit .env.local with your configuration
 ```
 
-### ساخت برای تولید
+3. **Database Setup**
 ```bash
-cd client && npm run build
+# Create Vercel Postgres database
+vercel postgres create rental-management-db
+
+# Initialize schema
+npm run db:init
+
+# Optional: Migrate existing data
+npm run db:migrate
 ```
 
-## 📞 پشتیبانی
+4. **Development**
+```bash
+npm run dev
+```
 
-برای گزارش مشکلات یا درخواست ویژگی جدید، لطفاً issue ایجاد کنید.
+5. **Deploy**
+```bash
+vercel --prod
+```
+
+## 🔧 Configuration
+
+### Required Environment Variables
+
+```env
+# Database (Auto-configured by Vercel)
+POSTGRES_URL=
+POSTGRES_PRISMA_URL=
+POSTGRES_URL_NON_POOLING=
+
+# Authentication
+JWT_SECRET=your-super-secret-jwt-key
+
+# Email (Resend)
+EMAIL_USER=noreply@yourdomain.com
+EMAIL_PASS=re_your-resend-api-key
+
+# Optional: Telegram
+TELEGRAM_BOT_TOKEN=your-bot-token
+TELEGRAM_CHAT_ID=your-chat-id
+
+# Optional: WhatsApp (Twilio)
+WHATSAPP_ACCOUNT_SID=your-twilio-sid
+WHATSAPP_AUTH_TOKEN=your-twilio-token
+WHATSAPP_TO_NUMBER=+1234567890
+```
+
+## 🔐 Default Credentials
+
+- **Admin Username**: `admin`
+- **Admin Password**: `admin123`
+
+⚠️ **Important**: Change the default admin password in production!
+
+## 📱 Usage
+
+### Admin Dashboard
+1. Login with admin credentials
+2. Create new rental contracts
+3. View analytics and reports
+4. Manage notification settings
+5. Track payments and expenses
+
+### Tenant Portal
+1. Login with contract number and access code
+2. View contract details
+3. Sign contracts digitally
+4. Upload required documents
+
+## 🔄 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Health check |
+| POST | `/api/login` | Authentication |
+| GET | `/api/contracts` | List contracts |
+| POST | `/api/contracts` | Create contract |
+| POST | `/api/contracts/[contractNumber]/sign` | Sign contract |
+| GET | `/api/charts/income` | Income analytics |
+| GET | `/api/charts/status` | Status analytics |
+| GET/POST | `/api/settings/notifications` | Notification settings |
+| POST | `/api/notifications/test` | Test notifications |
+
+## 🗄️ Database Schema
+
+### Tables
+- **users**: Admin user management
+- **contracts**: Rental contract storage
+- **notification_settings**: Notification preferences
+- **expenses**: Expense tracking
+- **payments**: Payment records
+- **maintenance_requests**: Maintenance tracking
+
+## 🔔 Notification Services
+
+### Email (Resend)
+- Contract creation notifications
+- Signing confirmations
+- System alerts
+
+### Telegram
+- Real-time contract updates
+- System status notifications
+
+### WhatsApp (Twilio)
+- Important contract notifications
+- Urgent system alerts
+
+## 🧪 Testing
+
+### Local Testing
+```bash
+npm run dev
+npm run verify-deployment
+```
+
+### Production Testing
+```bash
+# Verify all endpoints
+node scripts/verify-deployment.js
+```
+
+## 📦 Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run db:init` - Initialize database
+- `npm run db:migrate` - Migrate data
+- `npm run type-check` - TypeScript validation
+
+## 🔒 Security Features
+
+- JWT-based authentication
+- Password hashing with bcrypt
+- CORS protection
+- Environment variable security
+- SQL injection prevention
+- XSS protection
+
+## 🌐 Internationalization
+
+- Full Persian/Farsi language support
+- RTL (Right-to-Left) layout
+- Persian date formatting
+- Localized error messages
+
+## 📊 Analytics & Monitoring
+
+- Income tracking by month
+- Contract status distribution
+- Payment analytics
+- Vercel Analytics integration
+- Real-time performance monitoring
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection**: Verify POSTGRES_URL is set
+2. **Authentication**: Check JWT_SECRET configuration
+3. **CORS Errors**: Verify NEXT_PUBLIC_API_URL
+4. **Build Errors**: Run `npm run type-check`
+
+### Support Resources
+- [Vercel Documentation](https://vercel.com/docs)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Vercel Postgres Guide](https://vercel.com/docs/storage/vercel-postgres)
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ---
-**نسخه:** 1.0.0 | **آخرین بروزرسانی:** آپلود کارت ملی
+
+**Built with ❤️ for the Persian rental management community**
