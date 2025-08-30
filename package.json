@@ -1,14 +1,44 @@
 {
-  "name": "rental-management-system-fullstack",
+  "name": "rental-management-worker",
   "version": "1.0.0",
-  "private": true,
+  "description": "Cloudflare Worker API for Rental Management System",
+  "main": "src/index.ts",
   "scripts": {
-    "install-all": "npm install && (cd server && npm install) && (cd client && npm install)",
-    "start": "concurrently \"npm run start-server\" \"npm run start-client\"",
-    "start-server": "cd server && npm start",
-    "start-client": "cd client && npm start"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:prod": "wrangler deploy --env production",
+    "build": "tsc",
+    "db:create": "wrangler d1 create rental-management-db",
+    "db:migrate": "wrangler d1 execute rental-management-db --file=schema.sql",
+    "db:migrate:local": "wrangler d1 execute rental-management-db --local --file=schema.sql",
+    "kv:create": "wrangler kv:namespace create RENTAL_KV",
+    "secrets:setup": "npm run secrets:jwt && npm run secrets:email",
+    "secrets:jwt": "wrangler secret put JWT_SECRET",
+    "secrets:email": "wrangler secret put EMAIL_USER && wrangler secret put EMAIL_PASS",
+    "secrets:telegram": "wrangler secret put TELEGRAM_BOT_TOKEN",
+    "secrets:whatsapp": "wrangler secret put WHATSAPP_ACCOUNT_SID && wrangler secret put WHATSAPP_AUTH_TOKEN",
+    "test": "wrangler dev --test-scheduled",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.3.0",
+    "wrangler": "^3.78.0"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "rental-management",
+    "hono",
+    "d1",
+    "persian"
+  ],
+  "author": "Rental Management System",
+  "license": "MIT"
 }
