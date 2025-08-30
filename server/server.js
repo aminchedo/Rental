@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite dev server
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : 'http://localhost:5173',
   credentials: true
 }));
 
@@ -25,7 +25,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Set to true in production with HTTPS
+    secure: process.env.NODE_ENV === 'production', // true in production with HTTPS
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
