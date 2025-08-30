@@ -16,11 +16,10 @@ interface ContractFormPageProps {
 
 const ContractFormPage: React.FC<ContractFormPageProps> = ({
   selectedContract,
-  onNavigateToDashboard,
-  addNotification
+  onNavigateToDashboard
 }) => {
   const { currentUser } = useAuth();
-  const { addContract, updateContract, signContract, lookupTenantByNationalId, lookupLandlordByNationalId } = useContracts();
+  const { addContract, signContract, lookupTenantByNationalId, lookupLandlordByNationalId } = useContracts();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<any>({

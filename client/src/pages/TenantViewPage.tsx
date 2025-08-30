@@ -20,7 +20,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
   const [signaturePreview, setSignaturePreview] = useState<any>(null);
   const [, setNationalIdImage] = useState<any>(null);
   const [nationalIdPreview, setNationalIdPreview] = useState<any>(null);
-  const [uploadProgress, setUploadProgress] = useState({ signature: false, nationalId: false });
+  // Note: uploadProgress removed as it's handled by the new ImageUploadModal
   const [isFormComplete, setIsFormComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
@@ -41,81 +41,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
     setIsFormComplete(!!signatureImage);
   }, [signatureImage]);
 
-  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      if (file.size > 10 * 1024 * 1024) { 
-        toast.error('حجم فایل باید کمتر از 10 مگابایت باشد'); 
-        return; 
-      }
-      
-      setUploadProgress(prev => ({ ...prev, signature: true }));
-      const img = new Image();
-      img.onload = () => {
-        if (img.width < 150 || img.height < 50) {
-          toast.error('کیفیت تصویر امضا باید حداقل 150x50 پیکسل باشد');
-          setUploadProgress(prev => ({ ...prev, signature: false }));
-          return;
-        }
-        
-        setSignatureImage(file);
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          setSignaturePreview(ev.target?.result);
-          setUploadProgress(prev => ({ ...prev, signature: false }));
-        };
-        reader.readAsDataURL(file);
-        addNotification('امضای شما با موفقیت آپلود شد', 'success');
-      };
-      
-      img.onerror = () => {
-        toast.error('فایل تصویری معتبر نیست');
-        setUploadProgress(prev => ({ ...prev, signature: false }));
-      };
-      
-      img.src = URL.createObjectURL(file);
-    } else {
-      toast.error('لطفاً یک فایل تصویری معتبر انتخاب کنید');
-    }
-  };
-
-  const handleNationalIdUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      if (file.size > 10 * 1024 * 1024) { 
-        toast.error('حجم فایل باید کمتر از 10 مگابایت باشد'); 
-        return; 
-      }
-      
-      setUploadProgress(prev => ({ ...prev, nationalId: true }));
-      const img = new Image();
-      img.onload = () => {
-        if (img.width < 200 || img.height < 200) {
-          toast.error('کیفیت تصویر باید حداقل 200x200 پیکسل باشد');
-          setUploadProgress(prev => ({ ...prev, nationalId: false }));
-          return;
-        }
-        
-        setNationalIdImage(file);
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          setNationalIdPreview(ev.target?.result);
-          setUploadProgress(prev => ({ ...prev, nationalId: false }));
-        };
-        reader.readAsDataURL(file);
-        addNotification('تصویر کارت ملی با موفقیت آپلود شد', 'success');
-      };
-      
-      img.onerror = () => {
-        toast.error('فایل تصویری معتبر نیست');
-        setUploadProgress(prev => ({ ...prev, nationalId: false }));
-      };
-      
-      img.src = URL.createObjectURL(file);
-    } else {
-      toast.error('لطفاً یک فایل تصویری معتبر انتخاب کنید');
-    }
-  };
+  // Note: Legacy upload handlers replaced by ImageUploadModal
 
   const removeSignature = () => {
     setSignatureImage(null);
@@ -142,95 +68,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
     addNotification('تصویر کارت ملی با موفقیت آپلود شد', 'success');
   };
 
-  const generatePDF = (contractData: any) => {
-    const printWindow = window.open('', '_blank');
-    
-    const pdfContent = `
-      <!DOCTYPE html>
-      <html lang="fa" dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <title>قرارداد اجاره ${contractData.contractNumber}</title>
-        <style>
-          * { font-family: 'Tahoma', Arial, sans-serif; }
-          body { margin: 40px; line-height: 1.6; }
-          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-          .section { margin-bottom: 25px; }
-          .signature-section { margin-top: 50px; display: flex; justify-content: space-between; }
-          .signature-box { width: 200px; height: 100px; border: 1px solid #333; text-align: center; padding: 10px; }
-          .terms { font-size: 12px; margin-top: 30px; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th, td { border: 1px solid #333; padding: 8px; text-align: right; }
-          th { background-color: #f5f5f5; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>قرارداد اجاره مسکونی</h1>
-          <p>شماره قرارداد: ${contractData.contractNumber}</p>
-          <p>تاریخ تنظیم: ${new Date().toLocaleDateString('fa-IR')}</p>
-        </div>
-        
-        <div class="section">
-          <h3>اطلاعات طرفین قرارداد:</h3>
-          <table>
-            <tr><th>موجر (مالک)</th><td>${contractData.landlordName}</td></tr>
-            <tr><th>ایمیل موجر</th><td>${contractData.landlordEmail}</td></tr>
-            <tr><th>مستأجر</th><td>${contractData.tenantName}</td></tr>
-            <tr><th>ایمیل مستأجر</th><td>${contractData.tenantEmail}</td></tr>
-            <tr><th>تلفن مستأجر</th><td>${contractData.tenantPhone}</td></tr>
-          </table>
-        </div>
-        
-        <div class="section">
-          <h3>مشخصات ملک:</h3>
-          <table>
-            <tr><th>آدرس</th><td>${contractData.propertyAddress}</td></tr>
-            <tr><th>نوع ملک</th><td>${contractData.propertyType}</td></tr>
-          </table>
-        </div>
-        
-        <div class="section">
-          <h3>شرایط مالی:</h3>
-          <table>
-            <tr><th>مبلغ اجاره ماهانه</th><td>${contractData.rentAmount} تومان</td></tr>
-            <tr><th>مبلغ ودیعه</th><td>${contractData.deposit} تومان</td></tr>
-            <tr><th>تاریخ شروع</th><td>${contractData.startDate}</td></tr>
-            <tr><th>تاریخ پایان</th><td>${contractData.endDate}</td></tr>
-          </table>
-        </div>
-        
-        <div class="signature-section">
-          <div class="signature-box">
-            <strong>امضای موجر</strong><br><br>
-            ${contractData.landlordName}<br>
-            تاریخ: ...................
-          </div>
-          <div class="signature-box">
-            <strong>امضای مستأجر</strong><br><br>
-            ${contractData.tenantName}<br>
-            تاریخ: ${contractData.signedAt ? new Date(contractData.signedAt).toLocaleDateString('fa-IR') : '..................'}
-            ${contractData.signature ? '<br><img src="' + contractData.signature + '" style="max-width: 150px; max-height: 50px; margin-top: 10px;">' : ''}
-          </div>
-        </div>
-        
-        <div class="terms">
-          <h4>شرایط عمومی:</h4>
-          <p>1. مستأجر متعهد است مبلغ اجاره را تا تاریخ 5 هر ماه پرداخت نماید.</p>
-          <p>2. هرگونه تغییر در ملک باید با اجازه کتبی موجر صورت گیرد.</p>
-          <p>3. در صورت تخلف از شرایط قرارداد، موجر حق فسخ قرارداد را دارد.</p>
-          <p>4. این قرارداد در ${new Date().toLocaleDateString('fa-IR')} تنظیم و امضا شده است.</p>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    if (printWindow) {
-      printWindow.document.write(pdfContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
+  // Note: PDF generation is handled by the parent component
 
   const signContractHandler = async () => {
     if (!isFormComplete) return;
