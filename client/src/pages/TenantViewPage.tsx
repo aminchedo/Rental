@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   FileText, CheckCircle, AlertCircle, Upload, CreditCard, Shield 
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useContracts } from '../context/ContractContext';
 
@@ -12,7 +13,7 @@ interface TenantViewPageProps {
 
 const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotification }) => {
   const { } = useAuth();
-  const { updateContract } = useContracts();
+  const { signContract } = useContracts();
   
   const [signatureImage, setSignatureImage] = useState<any>(null);
   const [signaturePreview, setSignaturePreview] = useState<any>(null);
@@ -41,7 +42,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       if (file.size > 10 * 1024 * 1024) { 
-        alert('حجم فایل باید کمتر از 10 مگابایت باشد'); 
+        toast.error('حجم فایل باید کمتر از 10 مگابایت باشد'); 
         return; 
       }
       
@@ -49,7 +50,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
       const img = new Image();
       img.onload = () => {
         if (img.width < 150 || img.height < 50) {
-          alert('کیفیت تصویر امضا باید حداقل 150x50 پیکسل باشد');
+          toast.error('کیفیت تصویر امضا باید حداقل 150x50 پیکسل باشد');
           setUploadProgress(prev => ({ ...prev, signature: false }));
           return;
         }
@@ -65,13 +66,13 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
       };
       
       img.onerror = () => {
-        alert('فایل تصویری معتبر نیست');
+        toast.error('فایل تصویری معتبر نیست');
         setUploadProgress(prev => ({ ...prev, signature: false }));
       };
       
       img.src = URL.createObjectURL(file);
     } else {
-      alert('لطفاً یک فایل تصویری معتبر انتخاب کنید');
+      toast.error('لطفاً یک فایل تصویری معتبر انتخاب کنید');
     }
   };
 
@@ -79,7 +80,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       if (file.size > 10 * 1024 * 1024) { 
-        alert('حجم فایل باید کمتر از 10 مگابایت باشد'); 
+        toast.error('حجم فایل باید کمتر از 10 مگابایت باشد'); 
         return; 
       }
       
@@ -87,7 +88,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
       const img = new Image();
       img.onload = () => {
         if (img.width < 200 || img.height < 200) {
-          alert('کیفیت تصویر باید حداقل 200x200 پیکسل باشد');
+          toast.error('کیفیت تصویر باید حداقل 200x200 پیکسل باشد');
           setUploadProgress(prev => ({ ...prev, nationalId: false }));
           return;
         }
@@ -103,13 +104,13 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
       };
       
       img.onerror = () => {
-        alert('فایل تصویری معتبر نیست');
+        toast.error('فایل تصویری معتبر نیست');
         setUploadProgress(prev => ({ ...prev, nationalId: false }));
       };
       
       img.src = URL.createObjectURL(file);
     } else {
-      alert('لطفاً یک فایل تصویری معتبر انتخاب کنید');
+      toast.error('لطفاً یک فایل تصویری معتبر انتخاب کنید');
     }
   };
 
@@ -215,36 +216,23 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
     }
   };
 
-  const signContract = async () => {
+  const signContractHandler = async () => {
     if (!isFormComplete) return;
 
     setIsLoading(true);
 
     try {
-      const signedContract = {
-        ...contract,
-        signature: signaturePreview,
-        nationalId: nationalIdPreview,
-        status: 'signed' as const,
-        signedAt: new Date().toISOString(),
-        lastModified: new Date().toISOString()
-      };
-
-      await updateContract(contract.contractNumber, signedContract);
+      await signContract(contract.contractNumber, signaturePreview);
       
       setTimeout(() => {
-        generatePDF(signedContract);
         setIsLoading(false);
-        addNotification(`قرارداد ${contract.contractNumber} امضا شد و PDF به طرفین ارسال گردید`, 'success');
-        alert('قرارداد با موفقیت امضا شد!\nفایل PDF به ایمیل شما و مالک ارسال شد.');
-        
         setTimeout(() => {
           window.location.reload();
         }, 2000);
       }, 2000);
     } catch (error) {
       setIsLoading(false);
-      addNotification('خطا در امضای قرارداد', 'error');
+      toast.error('خطا در امضای قرارداد');
     }
   };
 
@@ -402,7 +390,7 @@ const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotificati
       
       <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-8 border-t border-gray-200">
         <button
-          onClick={signContract}
+          onClick={signContractHandler}
           disabled={!isFormComplete || isLoading}
           className="flex-1 py-4 px-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >

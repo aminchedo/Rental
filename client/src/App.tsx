@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ContractProvider } from './context/ContractContext';
 import LoginPage from './pages/LoginPage';
@@ -142,7 +143,6 @@ const AppContent: React.FC = () => {
 
   const handleResendAccessCode = (contract: any) => {
     addNotification(`کد دسترسی به ${contract.tenantName} ارسال شد`, 'info');
-    alert('کد دسترسی به ایمیل مستأجر ارسال شد');
   };
 
   const resetForm = () => {
@@ -160,6 +160,31 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+            fontFamily: 'Tahoma, Arial, sans-serif',
+            direction: 'rtl',
+            textAlign: 'right'
+          },
+          success: {
+            style: {
+              background: '#10b981',
+            },
+          },
+          error: {
+            style: {
+              background: '#ef4444',
+            },
+          },
+        }}
+      />
+      
       <Header 
         currentView={currentView}
         onNavigateToView={setCurrentView}

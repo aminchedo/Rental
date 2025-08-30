@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, User, Building2, MapPin, DollarSign, CheckCircle, 
-  AlertCircle, Home, Upload, CreditCard, Shield 
+  AlertCircle, Home, Upload, CreditCard, Shield, ChevronRight, 
+  ChevronLeft, Search, Loader
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useContracts } from '../context/ContractContext';
 
@@ -18,11 +20,12 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
   addNotification
 }) => {
   const { currentUser } = useAuth();
-  const { addContract, updateContract } = useContracts();
+  const { addContract, updateContract, signContract, lookupTenantByNationalId, lookupLandlordByNationalId } = useContracts();
   
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<any>({
-    contractNumber: '', tenantName: '', tenantEmail: '', tenantPhone: '',
-    landlordName: '', landlordEmail: '', propertyAddress: '', propertyType: '',
+    contractNumber: '', tenantName: '', tenantEmail: '', tenantPhone: '', tenantNationalId: '',
+    landlordName: '', landlordEmail: '', landlordNationalId: '', propertyAddress: '', propertyType: '',
     rentAmount: '', startDate: '', endDate: '', deposit: '',
     status: 'draft', accessCode: '', createdBy: 'landlord'
   });
@@ -32,8 +35,15 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
   const [, setNationalIdImage] = useState<any>(null);
   const [nationalIdPreview, setNationalIdPreview] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState({ signature: false, nationalId: false });
-  const [isFormComplete, setIsFormComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState({ tenant: false, landlord: false });
+
+  const steps = [
+    { id: 1, title: 'اطلاعات موجر', icon: Building2 },
+    { id: 2, title: 'اطلاعات مستأجر', icon: User },
+    { id: 3, title: 'مشخصات ملک و اجاره', icon: MapPin },
+    { id: 4, title: 'بررسی نهایی و ایجاد', icon: CheckCircle }
+  ];
 
   useEffect(() => {
     if (selectedContract) {
@@ -49,12 +59,6 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
     }
   }, [selectedContract]);
 
-  useEffect(() => {
-    const requiredFields = ['tenantName', 'tenantEmail', 'landlordName', 'landlordEmail', 'propertyAddress', 'rentAmount', 'startDate', 'endDate', 'deposit'];
-    const isComplete = requiredFields.every(field => formData[field]?.toString().trim() !== '') && signatureImage;
-    setIsFormComplete(isComplete);
-  }, [formData, signatureImage]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({
@@ -63,11 +67,54 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
     }));
   };
 
+  const handleTenantNationalIdLookup = async (nationalId: string) => {
+    if (!/^\d{10}$/.test(nationalId)) return;
+    
+    setLookupLoading(prev => ({ ...prev, tenant: true }));
+    try {
+      const tenantData = await lookupTenantByNationalId(nationalId);
+      if (tenantData) {
+        setFormData((prev: any) => ({
+          ...prev,
+          tenantName: tenantData.tenantName,
+          tenantEmail: tenantData.tenantEmail,
+          tenantPhone: tenantData.tenantPhone
+        }));
+        toast.success('اطلاعات مستأجر پیدا شد و فیلدها تکمیل شدند');
+      }
+    } catch (error) {
+      // Error handling is done in the context
+    } finally {
+      setLookupLoading(prev => ({ ...prev, tenant: false }));
+    }
+  };
+
+  const handleLandlordNationalIdLookup = async (nationalId: string) => {
+    if (!/^\d{10}$/.test(nationalId)) return;
+    
+    setLookupLoading(prev => ({ ...prev, landlord: true }));
+    try {
+      const landlordData = await lookupLandlordByNationalId(nationalId);
+      if (landlordData) {
+        setFormData((prev: any) => ({
+          ...prev,
+          landlordName: landlordData.landlordName,
+          landlordEmail: landlordData.landlordEmail
+        }));
+        toast.success('اطلاعات موجر پیدا شد و فیلدها تکمیل شدند');
+      }
+    } catch (error) {
+      // Error handling is done in the context
+    } finally {
+      setLookupLoading(prev => ({ ...prev, landlord: false }));
+    }
+  };
+
   const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       if (file.size > 10 * 1024 * 1024) { 
-        alert('حجم فایل باید کمتر از 10 مگابایت باشد'); 
+        toast.error('حجم فایل باید کمتر از 10 مگابایت باشد'); 
         return; 
       }
       
@@ -75,7 +122,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
       const img = new Image();
       img.onload = () => {
         if (img.width < 150 || img.height < 50) {
-          alert('کیفیت تصویر امضا باید حداقل 150x50 پیکسل باشد');
+          toast.error('کیفیت تصویر امضا باید حداقل 150x50 پیکسل باشد');
           setUploadProgress(prev => ({ ...prev, signature: false }));
           return;
         }
@@ -87,17 +134,17 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
           setUploadProgress(prev => ({ ...prev, signature: false }));
         };
         reader.readAsDataURL(file);
-        addNotification('امضای شما با موفقیت آپلود شد', 'success');
+        toast.success('امضای شما با موفقیت آپلود شد');
       };
       
       img.onerror = () => {
-        alert('فایل تصویری معتبر نیست');
+        toast.error('فایل تصویری معتبر نیست');
         setUploadProgress(prev => ({ ...prev, signature: false }));
       };
       
       img.src = URL.createObjectURL(file);
     } else {
-      alert('لطفاً یک فایل تصویری معتبر انتخاب کنید');
+      toast.error('لطفاً یک فایل تصویری معتبر انتخاب کنید');
     }
   };
 
@@ -105,7 +152,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       if (file.size > 10 * 1024 * 1024) { 
-        alert('حجم فایل باید کمتر از 10 مگابایت باشد'); 
+        toast.error('حجم فایل باید کمتر از 10 مگابایت باشد'); 
         return; 
       }
       
@@ -113,7 +160,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
       const img = new Image();
       img.onload = () => {
         if (img.width < 200 || img.height < 200) {
-          alert('کیفیت تصویر باید حداقل 200x200 پیکسل باشد');
+          toast.error('کیفیت تصویر باید حداقل 200x200 پیکسل باشد');
           setUploadProgress(prev => ({ ...prev, nationalId: false }));
           return;
         }
@@ -125,176 +172,99 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
           setUploadProgress(prev => ({ ...prev, nationalId: false }));
         };
         reader.readAsDataURL(file);
-        addNotification('تصویر کارت ملی با موفقیت آپلود شد', 'success');
+        toast.success('تصویر کارت ملی با موفقیت آپلود شد');
       };
       
       img.onerror = () => {
-        alert('فایل تصویری معتبر نیست');
+        toast.error('فایل تصویری معتبر نیست');
         setUploadProgress(prev => ({ ...prev, nationalId: false }));
       };
       
       img.src = URL.createObjectURL(file);
     } else {
-      alert('لطفاً یک فایل تصویری معتبر انتخاب کنید');
+      toast.error('لطفاً یک فایل تصویری معتبر انتخاب کنید');
     }
   };
 
   const removeSignature = () => {
     setSignatureImage(null);
     setSignaturePreview(null);
-    addNotification('امضا حذف شد', 'info');
+    toast.success('امضا حذف شد');
   };
 
   const removeNationalId = () => {
     setNationalIdImage(null);
     setNationalIdPreview(null);
-    addNotification('تصویر کارت ملی حذف شد', 'info');
+    toast.success('تصویر کارت ملی حذف شد');
   };
 
-  const generatePDF = (contract: any) => {
-    const contractData = contract || formData;
-    const printWindow = window.open('', '_blank');
-    
-    const pdfContent = `
-      <!DOCTYPE html>
-      <html lang="fa" dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <title>قرارداد اجاره ${contractData.contractNumber}</title>
-        <style>
-          * { font-family: 'Tahoma', Arial, sans-serif; }
-          body { margin: 40px; line-height: 1.6; }
-          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-          .section { margin-bottom: 25px; }
-          .signature-section { margin-top: 50px; display: flex; justify-content: space-between; }
-          .signature-box { width: 200px; height: 100px; border: 1px solid #333; text-align: center; padding: 10px; }
-          .terms { font-size: 12px; margin-top: 30px; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th, td { border: 1px solid #333; padding: 8px; text-align: right; }
-          th { background-color: #f5f5f5; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>قرارداد اجاره مسکونی</h1>
-          <p>شماره قرارداد: ${contractData.contractNumber}</p>
-          <p>تاریخ تنظیم: ${new Date().toLocaleDateString('fa-IR')}</p>
-        </div>
-        
-        <div class="section">
-          <h3>اطلاعات طرفین قرارداد:</h3>
-          <table>
-            <tr><th>موجر (مالک)</th><td>${contractData.landlordName}</td></tr>
-            <tr><th>ایمیل موجر</th><td>${contractData.landlordEmail}</td></tr>
-            <tr><th>مستأجر</th><td>${contractData.tenantName}</td></tr>
-            <tr><th>ایمیل مستأجر</th><td>${contractData.tenantEmail}</td></tr>
-            <tr><th>تلفن مستأجر</th><td>${contractData.tenantPhone}</td></tr>
-          </table>
-        </div>
-        
-        <div class="section">
-          <h3>مشخصات ملک:</h3>
-          <table>
-            <tr><th>آدرس</th><td>${contractData.propertyAddress}</td></tr>
-            <tr><th>نوع ملک</th><td>${contractData.propertyType}</td></tr>
-          </table>
-        </div>
-        
-        <div class="section">
-          <h3>شرایط مالی:</h3>
-          <table>
-            <tr><th>مبلغ اجاره ماهانه</th><td>${contractData.rentAmount} تومان</td></tr>
-            <tr><th>مبلغ ودیعه</th><td>${contractData.deposit} تومان</td></tr>
-            <tr><th>تاریخ شروع</th><td>${contractData.startDate}</td></tr>
-            <tr><th>تاریخ پایان</th><td>${contractData.endDate}</td></tr>
-          </table>
-        </div>
-        
-        <div class="signature-section">
-          <div class="signature-box">
-            <strong>امضای موجر</strong><br><br>
-            ${contractData.landlordName}<br>
-            تاریخ: ...................
-          </div>
-          <div class="signature-box">
-            <strong>امضای مستأجر</strong><br><br>
-            ${contractData.tenantName}<br>
-            تاریخ: ${contractData.signedAt ? new Date(contractData.signedAt).toLocaleDateString('fa-IR') : '..................'}
-            ${contractData.signature ? '<br><img src="' + contractData.signature + '" style="max-width: 150px; max-height: 50px; margin-top: 10px;">' : ''}
-          </div>
-        </div>
-        
-        <div class="terms">
-          <h4>شرایط عمومی:</h4>
-          <p>1. مستأجر متعهد است مبلغ اجاره را تا تاریخ 5 هر ماه پرداخت نماید.</p>
-          <p>2. هرگونه تغییر در ملک باید با اجازه کتبی موجر صورت گیرد.</p>
-          <p>3. در صورت تخلف از شرایط قرارداد، موجر حق فسخ قرارداد را دارد.</p>
-          <p>4. این قرارداد در ${new Date().toLocaleDateString('fa-IR')} تنظیم و امضا شده است.</p>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    if (printWindow) {
-      printWindow.document.write(pdfContent);
-      printWindow.document.close();
-      printWindow.print();
+  const validateCurrentStep = () => {
+    switch (currentStep) {
+      case 1: // Landlord Info
+        return formData.landlordName && formData.landlordEmail;
+      case 2: // Tenant Info
+        return formData.tenantName && formData.tenantEmail;
+      case 3: // Property & Rent Details
+        return formData.propertyAddress && formData.rentAmount && formData.startDate && formData.endDate && formData.deposit;
+      case 4: // Final Review
+        return signatureImage;
+      default:
+        return false;
     }
   };
 
-  const createContract = async () => {
-    if (!isFormComplete) return;
+  const nextStep = () => {
+    if (validateCurrentStep() && currentStep < 4) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
 
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const createContractHandler = async () => {
+    if (!validateCurrentStep()) return;
+
+    setIsLoading(true);
     try {
       const contract = await addContract(formData);
-      addNotification(`قرارداد ${contract.contractNumber} ایجاد شد و کد دسترسی به ${contract.tenantName} ارسال گردید`, 'success');
-      alert(`قرارداد با موفقیت ایجاد شد!\n\nشماره قرارداد: ${contract.contractNumber}\nکد دسترسی: ${contract.accessCode}\n\nکد دسترسی به ایمیل مستأجر ارسال شد.`);
+      toast.success(`قرارداد ${contract.contractNumber} ایجاد شد و کد دسترسی به ${contract.tenantName} ارسال گردید`);
       
       onNavigateToDashboard();
       resetForm();
     } catch (error) {
-      addNotification('خطا در ایجاد قرارداد', 'error');
+      toast.error('خطا در ایجاد قرارداد');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const signContract = async () => {
-    if (!isFormComplete || currentUser?.role !== 'tenant') return;
+  const signContractHandler = async () => {
+    if (!validateCurrentStep() || currentUser?.role !== 'tenant') return;
 
     setIsLoading(true);
-
     try {
-      const signedContract = {
-        ...formData,
-        signature: signaturePreview,
-        nationalId: nationalIdPreview,
-        status: 'signed' as const,
-        signedAt: new Date().toISOString(),
-        lastModified: new Date().toISOString()
-      };
-
-      await updateContract(formData.contractNumber, signedContract);
+      await signContract(formData.contractNumber, signaturePreview);
       
       setTimeout(() => {
-        generatePDF(signedContract);
         setIsLoading(false);
-        addNotification(`قرارداد ${formData.contractNumber} امضا شد و PDF به طرفین ارسال گردید`, 'success');
-        alert('قرارداد با موفقیت امضا شد!\nفایل PDF به ایمیل شما و مالک ارسال شد.');
-        
         setTimeout(() => {
-          // Will trigger logout in parent component
           window.location.reload();
         }, 2000);
       }, 2000);
     } catch (error) {
       setIsLoading(false);
-      addNotification('خطا در امضای قرارداد', 'error');
+      toast.error('خطا در امضای قرارداد');
     }
   };
 
   const resetForm = () => {
     setFormData({
-      contractNumber: '', tenantName: '', tenantEmail: '', tenantPhone: '',
-      landlordName: '', landlordEmail: '', propertyAddress: '', propertyType: '',
+      contractNumber: '', tenantName: '', tenantEmail: '', tenantPhone: '', tenantNationalId: '',
+      landlordName: '', landlordEmail: '', landlordNationalId: '', propertyAddress: '', propertyType: '',
       rentAmount: '', startDate: '', endDate: '', deposit: '',
       status: 'draft', accessCode: '', createdBy: 'landlord'
     });
@@ -303,229 +273,312 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
     setNationalIdImage(null);
     setNationalIdPreview(null);
     setUploadProgress({ signature: false, nationalId: false });
+    setCurrentStep(1);
   };
 
-  return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-            <FileText className="w-6 h-6 text-white" />
+  const renderProgressBar = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const isActive = currentStep === step.id;
+          const isCompleted = currentStep > step.id;
+          const isAccessible = currentStep >= step.id;
+          
+          return (
+            <React.Fragment key={step.id}>
+              <div className="flex flex-col items-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all ${
+                  isCompleted ? 'bg-green-500 text-white' :
+                  isActive ? 'bg-blue-500 text-white' :
+                  isAccessible ? 'bg-gray-200 text-gray-600' :
+                  'bg-gray-100 text-gray-400'
+                }`}>
+                  {isCompleted ? <CheckCircle className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                </div>
+                <span className={`text-sm font-medium ${
+                  isActive ? 'text-blue-600' : 
+                  isCompleted ? 'text-green-600' : 
+                  'text-gray-500'
+                }`}>
+                  {step.title}
+                </span>
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`flex-1 h-1 mx-4 rounded-full ${
+                  currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
+                }`} />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderStep1 = () => (
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <Building2 className="w-5 h-5 text-green-600" />
+        اطلاعات موجر
+      </h3>
+      
+      <div className="grid gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">کد ملی موجر</label>
+          <div className="relative">
+            <input
+              type="text"
+              name="landlordNationalId"
+              value={formData.landlordNationalId}
+              onChange={handleInputChange}
+              onBlur={(e) => handleLandlordNationalIdLookup(e.target.value)}
+              disabled={currentUser?.role === 'tenant'}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              placeholder="کد ملی 10 رقمی موجر"
+              maxLength={10}
+            />
+            {lookupLoading.landlord && (
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <Loader className="w-5 h-5 animate-spin text-green-500" />
+              </div>
+            )}
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              {currentUser?.role === 'landlord' ? 'ایجاد قرارداد جدید' : 'بررسی و امضای قرارداد'}
-            </h2>
-            <p className="text-gray-600">
-              {currentUser?.role === 'landlord' ? 'اطلاعات قرارداد را تکمیل کنید' : 'لطفاً اطلاعات را بررسی و قرارداد را امضا کنید'}
-            </p>
-          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            <Search className="w-3 h-3 inline ml-1" />
+            با وارد کردن کد ملی، اطلاعات قبلی موجر بارگذاری می‌شود
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">نام و نام خانوادگی *</label>
+          <input
+            type="text"
+            name="landlordName"
+            value={formData.landlordName}
+            onChange={handleInputChange}
+            disabled={currentUser?.role === 'tenant'}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            placeholder="نام کامل موجر"
+          />
         </div>
         
-        {currentUser?.role === 'landlord' && (
-          <button
-            onClick={onNavigateToDashboard}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
-          >
-            <Home className="w-4 h-4" />
-            بازگشت به داشبورد
-          </button>
-        )}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">ایمیل *</label>
+          <input
+            type="email"
+            name="landlordEmail"
+            value={formData.landlordEmail}
+            onChange={handleInputChange}
+            disabled={currentUser?.role === 'tenant'}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            placeholder="landlord@email.com"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <User className="w-5 h-5 text-blue-600" />
+        اطلاعات مستأجر
+      </h3>
+      
+      <div className="grid gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">کد ملی مستأجر</label>
+          <div className="relative">
+            <input
+              type="text"
+              name="tenantNationalId"
+              value={formData.tenantNationalId}
+              onChange={handleInputChange}
+              onBlur={(e) => handleTenantNationalIdLookup(e.target.value)}
+              disabled={currentUser?.role === 'tenant'}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              placeholder="کد ملی 10 رقمی مستأجر"
+              maxLength={10}
+            />
+            {lookupLoading.tenant && (
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <Loader className="w-5 h-5 animate-spin text-blue-500" />
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            <Search className="w-3 h-3 inline ml-1" />
+            با وارد کردن کد ملی، اطلاعات قبلی مستأجر بارگذاری می‌شود
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">نام و نام خانوادگی *</label>
+          <input
+            type="text"
+            name="tenantName"
+            value={formData.tenantName}
+            onChange={handleInputChange}
+            disabled={currentUser?.role === 'tenant'}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            placeholder="نام کامل مستأجر"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">ایمیل *</label>
+          <input
+            type="email"
+            name="tenantEmail"
+            value={formData.tenantEmail}
+            onChange={handleInputChange}
+            disabled={currentUser?.role === 'tenant'}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            placeholder="example@email.com"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">شماره تلفن</label>
+          <input
+            type="tel"
+            name="tenantPhone"
+            value={formData.tenantPhone}
+            onChange={handleInputChange}
+            disabled={currentUser?.role === 'tenant'}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            placeholder="09123456789"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-purple-600" />
+          مشخصات ملک
+        </h3>
+        
+        <div className="grid gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">آدرس کامل *</label>
+            <textarea
+              name="propertyAddress"
+              value={formData.propertyAddress}
+              onChange={handleInputChange}
+              disabled={currentUser?.role === 'tenant'}
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 resize-none"
+              placeholder="آدرس دقیق ملک مورد اجاره"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">نوع ملک</label>
+            <select
+              name="propertyType"
+              value={formData.propertyType}
+              onChange={handleInputChange}
+              disabled={currentUser?.role === 'tenant'}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            >
+              <option value="">انتخاب کنید</option>
+              <option value="آپارتمان">آپارتمان</option>
+              <option value="خانه ویلایی">خانه ویلایی</option>
+              <option value="مغازه">مغازه</option>
+              <option value="دفتر کار">دفتر کار</option>
+              <option value="انبار">انبار</option>
+              <option value="سایر">سایر</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
-              اطلاعات مستأجر
-            </h3>
-            
-            <div className="grid gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">نام و نام خانوادگی *</label>
-                <input
-                  type="text"
-                  name="tenantName"
-                  value={formData.tenantName}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="نام کامل مستأجر"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">ایمیل *</label>
-                <input
-                  type="email"
-                  name="tenantEmail"
-                  value={formData.tenantEmail}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="example@email.com"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">شماره تلفن</label>
-                <input
-                  type="tel"
-                  name="tenantPhone"
-                  value={formData.tenantPhone}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="09123456789"
-                />
-              </div>
-            </div>
+      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-2xl p-6 border border-orange-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-orange-600" />
+          شرایط مالی
+        </h3>
+        
+        <div className="grid gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">مبلغ اجاره ماهانه (تومان) *</label>
+            <input
+              type="number"
+              name="rentAmount"
+              value={formData.rentAmount}
+              onChange={handleInputChange}
+              disabled={currentUser?.role === 'tenant'}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              placeholder="5000000"
+            />
           </div>
-
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-green-600" />
-              اطلاعات موجر
-            </h3>
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">مبلغ ودیعه (تومان) *</label>
+            <input
+              type="number"
+              name="deposit"
+              value={formData.deposit}
+              onChange={handleInputChange}
+              disabled={currentUser?.role === 'tenant'}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              placeholder="50000000"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">تاریخ شروع *</label>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleInputChange}
+                disabled={currentUser?.role === 'tenant'}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              />
+            </div>
             
-            <div className="grid gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">نام و نام خانوادگی *</label>
-                <input
-                  type="text"
-                  name="landlordName"
-                  value={formData.landlordName}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="نام کامل موجر"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">ایمیل *</label>
-                <input
-                  type="email"
-                  name="landlordEmail"
-                  value={formData.landlordEmail}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="landlord@email.com"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">تاریخ پایان *</label>
+              <input
+                type="date"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleInputChange}
+                disabled={currentUser?.role === 'tenant'}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              />
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
 
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-purple-600" />
-              مشخصات ملک
-            </h3>
-            
-            <div className="grid gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">آدرس کامل *</label>
-                <textarea
-                  name="propertyAddress"
-                  value={formData.propertyAddress}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 resize-none"
-                  placeholder="آدرس دقیق ملک مورد اجاره"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">نوع ملک</label>
-                <select
-                  name="propertyType"
-                  value={formData.propertyType}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                >
-                  <option value="">انتخاب کنید</option>
-                  <option value="آپارتمان">آپارتمان</option>
-                  <option value="خانه ویلایی">خانه ویلایی</option>
-                  <option value="مغازه">مغازه</option>
-                  <option value="دفتر کار">دفتر کار</option>
-                  <option value="انبار">انبار</option>
-                  <option value="سایر">سایر</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-2xl p-6 border border-orange-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-orange-600" />
-              شرایط مالی
-            </h3>
-            
-            <div className="grid gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">مبلغ اجاره ماهانه (تومان) *</label>
-                <input
-                  type="number"
-                  name="rentAmount"
-                  value={formData.rentAmount}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="5000000"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">مبلغ ودیعه (تومان) *</label>
-                <input
-                  type="number"
-                  name="deposit"
-                  value={formData.deposit}
-                  onChange={handleInputChange}
-                  disabled={currentUser?.role === 'tenant'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  placeholder="50000000"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">تاریخ شروع *</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    disabled={currentUser?.role === 'tenant'}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">تاریخ پایان *</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={formData.endDate}
-                    onChange={handleInputChange}
-                    disabled={currentUser?.role === 'tenant'}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      {/* Contract Summary */}
+      <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl p-6 border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">خلاصه قرارداد</h3>
+        <div className="grid md:grid-cols-2 gap-4 text-sm">
+          <div><strong>موجر:</strong> {formData.landlordName}</div>
+          <div><strong>مستأجر:</strong> {formData.tenantName}</div>
+          <div><strong>آدرس ملک:</strong> {formData.propertyAddress}</div>
+          <div><strong>نوع ملک:</strong> {formData.propertyType}</div>
+          <div><strong>اجاره ماهانه:</strong> {formData.rentAmount?.toLocaleString()} تومان</div>
+          <div><strong>ودیعه:</strong> {formData.deposit?.toLocaleString()} تومان</div>
+          <div><strong>مدت قرارداد:</strong> {formData.startDate} تا {formData.endDate}</div>
         </div>
       </div>
 
       {/* Signature and National ID Upload Section */}
-      <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl p-8 mt-8 border border-gray-200">
+      <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl p-8 border border-gray-200">
         <h3 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-blue-600" />
           تایید و امضای قرارداد
@@ -624,21 +677,72 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
           </div>
         </div>
       </div>
-      
-      <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-8 border-t border-gray-200">
-        {currentUser?.role === 'landlord' ? (
+    </div>
+  );
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      case 3:
+        return renderStep3();
+      case 4:
+        return renderStep4();
+      default:
+        return renderStep1();
+    }
+  };
+
+  const renderNavigationButtons = () => (
+    <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-8 border-t border-gray-200">
+      <div className="flex gap-4 flex-1">
+        {currentStep > 1 && (
           <button
-            onClick={createContract}
-            disabled={!isFormComplete}
+            onClick={prevStep}
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors flex items-center gap-2"
+          >
+            <ChevronRight className="w-4 h-4" />
+            قبلی
+          </button>
+        )}
+        
+        {currentStep < 4 && (
+          <button
+            onClick={nextStep}
+            disabled={!validateCurrentStep()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            بعدی
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {currentStep === 4 && (
+        currentUser?.role === 'landlord' ? (
+          <button
+            onClick={createContractHandler}
+            disabled={!validateCurrentStep() || isLoading}
             className="flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
-            <CheckCircle className="w-5 h-5" />
-            ایجاد قرارداد و ارسال کد دسترسی
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                در حال ایجاد...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                ایجاد قرارداد و ارسال کد دسترسی
+              </>
+            )}
           </button>
         ) : (
           <button
-            onClick={signContract}
-            disabled={!isFormComplete || isLoading}
+            onClick={signContractHandler}
+            disabled={!validateCurrentStep() || isLoading}
             className="flex-1 py-4 px-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             {isLoading ? (
@@ -653,17 +757,71 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               </>
             )}
           </button>
+        )
+      )}
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+            <FileText className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {currentUser?.role === 'landlord' ? 'ایجاد قرارداد جدید' : 'بررسی و امضای قرارداد'}
+            </h2>
+            <p className="text-gray-600">
+              {currentUser?.role === 'landlord' ? 'اطلاعات قرارداد را تکمیل کنید' : 'لطفاً اطلاعات را بررسی و قرارداد را امضا کنید'}
+            </p>
+          </div>
+        </div>
+        
+        {currentUser?.role === 'landlord' && (
+          <button
+            onClick={onNavigateToDashboard}
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            بازگشت به داشبورد
+          </button>
         )}
       </div>
 
-      {!isFormComplete && (
+      {/* Progress Bar */}
+      {renderProgressBar()}
+
+      {/* Current Step Content */}
+      <div className="min-h-[400px]">
+        {renderCurrentStep()}
+      </div>
+
+      {/* Navigation Buttons */}
+      {renderNavigationButtons()}
+
+      {/* Validation Warning */}
+      {currentStep < 4 && !validateCurrentStep() && (
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
           <div className="flex items-center gap-2 text-yellow-800">
             <AlertCircle className="w-5 h-5" />
             <span className="font-semibold">تکمیل اطلاعات مورد نیاز</span>
           </div>
           <p className="text-yellow-700 text-sm mt-2">
-            لطفاً تمام فیلدهای ضروری (*) و تصویر امضا را تکمیل کنید.
+            لطفاً تمام فیلدهای ضروری (*) را تکمیل کنید تا بتوانید به مرحله بعد بروید.
+          </p>
+        </div>
+      )}
+
+      {currentStep === 4 && !validateCurrentStep() && (
+        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+          <div className="flex items-center gap-2 text-yellow-800">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-semibold">تکمیل اطلاعات مورد نیاز</span>
+          </div>
+          <p className="text-yellow-700 text-sm mt-2">
+            لطفاً تصویر امضا را آپلود کنید.
           </p>
         </div>
       )}

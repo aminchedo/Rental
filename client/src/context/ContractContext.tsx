@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const API_URL = 'http://localhost:5001/api';
 
@@ -10,8 +11,10 @@ interface Contract {
   tenantName: string;
   tenantEmail: string;
   tenantPhone: string;
+  tenantNationalId?: string;
   landlordName: string;
   landlordEmail: string;
+  landlordNationalId?: string;
   propertyAddress: string;
   propertyType: string;
   rentAmount: string;
@@ -40,6 +43,9 @@ interface ContractContextType {
   updateContract: (contractNumber: string, updates: Partial<Contract>) => Promise<void>;
   deleteContract: (contractNumber: string) => Promise<void>;
   terminateContract: (contractNumber: string) => Promise<void>;
+  signContract: (contractNumber: string, signature: string) => Promise<void>;
+  lookupTenantByNationalId: (nationalId: string) => Promise<any>;
+  lookupLandlordByNationalId: (nationalId: string) => Promise<any>;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (filter: string) => void;
   getContractByCredentials: (contractNumber: string, accessCode: string) => Contract | null;
@@ -143,6 +149,57 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
     await saveContracts(updatedContracts);
   };
 
+  const signContract = async (contractNumber: string, signature: string) => {
+    try {
+      const response = await axios.post(`${API_URL}/contracts/${contractNumber}/sign`, {
+        signature
+      }, {
+        withCredentials: true
+      });
+
+      if (response.data.success) {
+        toast.success('قرارداد با موفقیت امضا شد و ایمیل به موجر ارسال شد');
+        await fetchContracts(); // Refresh contracts
+      }
+    } catch (error) {
+      console.error('Error signing contract:', error);
+      toast.error('خطا در امضای قرارداد. لطفاً دوباره تلاش کنید.');
+      throw error;
+    }
+  };
+
+  const lookupTenantByNationalId = async (nationalId: string) => {
+    try {
+      const response = await axios.get(`${API_URL}/tenant/lookup/${nationalId}`, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return null; // No tenant found, which is fine for new tenants
+      }
+      console.error('Error looking up tenant:', error);
+      toast.error('خطا در جستجوی اطلاعات مستأجر');
+      throw error;
+    }
+  };
+
+  const lookupLandlordByNationalId = async (nationalId: string) => {
+    try {
+      const response = await axios.get(`${API_URL}/landlord/lookup/${nationalId}`, {
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return null; // No landlord found, which is fine for new landlords
+      }
+      console.error('Error looking up landlord:', error);
+      toast.error('خطا در جستجوی اطلاعات موجر');
+      throw error;
+    }
+  };
+
   const getContractByCredentials = (contractNumber: string, accessCode: string): Contract | null => {
     return contracts.find((c: Contract) => 
       c.contractNumber === contractNumber && 
@@ -194,6 +251,9 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
     updateContract,
     deleteContract,
     terminateContract,
+    signContract,
+    lookupTenantByNationalId,
+    lookupLandlordByNationalId,
     setSearchQuery,
     setStatusFilter,
     getContractByCredentials
