@@ -5,14 +5,14 @@ import { useContracts } from '../context/ContractContext';
 
 interface LoginPageProps {
   onTenantLogin: (contract: any) => void;
-  addNotification: (message: string, type?: string) => void;
+  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification }) => {
   const [loginForm, setLoginForm] = useState({ contractNumber: '', accessCode: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const { contracts, fetchContracts, getContractByCredentials } = useContracts();
+  const { login, setCurrentUser, setAuthenticated } = useAuth();
+  const { fetchContracts, getContractByCredentials } = useContracts();
 
   const handleAdminLogin = async () => {
     const { contractNumber: username, accessCode: password } = loginForm;
@@ -40,6 +40,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
           return;
         }
         
+        const tenantUser = {
+          role: 'tenant' as const,
+          name: contract.tenantName,
+          contractNumber: contract.contractNumber,
+          contract: contract
+        };
+        setCurrentUser(tenantUser);
+        setAuthenticated(true);
         onTenantLogin(contract);
         addNotification(`مستأجر ${contract.tenantName} وارد شد`, 'success');
       } else {

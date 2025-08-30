@@ -1,20 +1,18 @@
 import React from 'react';
 import { 
-  FileText, CheckCircle, Archive, Star, Home, RefreshCw, Search, 
+  FileText, CheckCircle, Archive, Star, RefreshCw, Search, 
   Folder, Copy, Eye, Download, Send, Trash2 
 } from 'lucide-react';
 import { useContracts } from '../context/ContractContext';
 
 interface DashboardPageProps {
-  onNavigateToForm: () => void;
   onEditContract: (contract: any) => void;
   onGeneratePDF: (contract: any) => void;
   onResendAccessCode: (contract: any) => void;
-  addNotification: (message: string, type?: string) => void;
+  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
-  onNavigateToForm,
   onEditContract,
   onGeneratePDF,
   onResendAccessCode,
@@ -22,8 +20,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const { 
     contracts, 
-    filteredContracts, 
-    isLoading,
+    filteredContracts,
     searchQuery,
     statusFilter,
     fetchContracts,

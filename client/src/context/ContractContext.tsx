@@ -36,7 +36,7 @@ interface ContractContextType {
   statusFilter: string;
   fetchContracts: () => Promise<void>;
   saveContracts: (contracts: Contract[]) => Promise<void>;
-  addContract: (contractData: Partial<Contract>) => Promise<void>;
+  addContract: (contractData: Partial<Contract>) => Promise<Contract>;
   updateContract: (contractNumber: string, updates: Partial<Contract>) => Promise<void>;
   deleteContract: (contractNumber: string) => Promise<void>;
   terminateContract: (contractNumber: string) => Promise<void>;
@@ -72,7 +72,9 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
   const fetchContracts = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/contracts`);
+      const response = await axios.get(`${API_URL}/contracts`, {
+        withCredentials: true
+      });
       const serverContracts = response.data || [];
       setContracts(serverContracts);
       filterContracts(serverContracts, searchQuery, statusFilter);
@@ -87,7 +89,9 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
 
   const saveContracts = async (updatedContracts: Contract[]) => {
     try {
-      await axios.post(`${API_URL}/contracts`, updatedContracts);
+      await axios.post(`${API_URL}/contracts`, updatedContracts, {
+        withCredentials: true
+      });
       setContracts(updatedContracts);
       filterContracts(updatedContracts, searchQuery, statusFilter);
     } catch (error) {

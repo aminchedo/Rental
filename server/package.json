@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "setup": "node setup.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
