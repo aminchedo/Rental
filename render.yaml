@@ -1,0 +1,52 @@
+services:
+  # Frontend - React Application
+  - type: static
+    name: rental-contract-frontend
+    env: node
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    rootDir: ./client
+    envVars:
+      - key: NODE_ENV
+        value: production
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # Backend - Express Server
+  - type: web
+    name: rental-contract-backend
+    env: node
+    rootDir: ./server
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: SESSION_SECRET
+        fromService: rental-contract-backend
+        fromEnvVar: SESSION_SECRET
+      - key: EMAIL_USER
+        fromService: rental-contract-backend
+        fromEnvVar: EMAIL_USER
+      - key: EMAIL_PASS
+        fromService: rental-contract-backend
+        fromEnvVar: EMAIL_PASS
+      - key: EMAIL_HOST
+        fromService: rental-contract-backend
+        fromEnvVar: EMAIL_HOST
+      - key: EMAIL_PORT
+        fromService: rental-contract-backend
+        fromEnvVar: EMAIL_PORT
+    healthCheckPath: /api/health
+    disk:
+      name: rental-contract-data
+      mountPath: /app/data
+      sizeGB: 1
+
+databases:
+  # SQLite database will be file-based on the persistent disk
+  # No separate database service needed as we're using SQLite
