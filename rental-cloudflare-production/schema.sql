@@ -86,6 +86,10 @@ CREATE TABLE IF NOT EXISTS notification_settings (
   
   -- Service configurations
   email_from TEXT,
+  email_host TEXT DEFAULT 'smtp.gmail.com',
+  email_port INTEGER DEFAULT 587,
+  email_username TEXT,
+  email_password TEXT,
   telegram_chat_id TEXT,
   telegram_bot_username TEXT,
   whatsapp_number TEXT,
@@ -100,14 +104,26 @@ CREATE TABLE IF NOT EXISTS notification_settings (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Expenses tracking
+-- System settings for advanced configuration
+CREATE TABLE IF NOT EXISTS settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  setting_key TEXT UNIQUE NOT NULL,
+  setting_value TEXT,
+  setting_type TEXT DEFAULT 'string', -- 'string', 'number', 'boolean', 'json'
+  description TEXT,
+  is_sensitive BOOLEAN DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Expenses table for financial tracking
 CREATE TABLE IF NOT EXISTS expenses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   contract_id TEXT,
+  category TEXT NOT NULL,
   amount REAL NOT NULL,
   description TEXT NOT NULL,
-  category TEXT,
-  date TEXT NOT NULL,
+  expense_date TEXT NOT NULL,
   receipt_image TEXT,
   approved BOOLEAN DEFAULT 0,
   approved_by INTEGER,
@@ -118,6 +134,8 @@ CREATE TABLE IF NOT EXISTS expenses (
   FOREIGN KEY (contract_id) REFERENCES contracts (id),
   FOREIGN KEY (approved_by) REFERENCES users (id)
 );
+
+
 
 -- Payments tracking
 CREATE TABLE IF NOT EXISTS payments (
@@ -227,6 +245,18 @@ INSERT OR IGNORE INTO users (username, password_hash, full_name, email, role, ac
 -- Insert default notification settings
 INSERT OR IGNORE INTO notification_settings (id, email_enabled, telegram_enabled, whatsapp_enabled) VALUES 
 (1, 0, 0, 0);
+
+-- Insert default system settings
+INSERT OR IGNORE INTO settings (setting_key, setting_value, setting_type, description) VALUES
+('app_name', 'سیستم مدیریت املاک', 'string', 'Application name'),
+('app_version', '2.0.0', 'string', 'Application version'),
+('default_currency', 'تومان', 'string', 'Default currency'),
+('late_fee_percentage', '5.0', 'number', 'Late payment fee percentage'),
+('contract_renewal_notice_days', '30', 'number', 'Days before contract expiry to send renewal notice'),
+('max_file_upload_size', '10485760', 'number', 'Maximum file upload size in bytes (10MB)'),
+('enable_email_notifications', 'false', 'boolean', 'Enable email notifications globally'),
+('enable_telegram_notifications', 'false', 'boolean', 'Enable Telegram notifications globally'),
+('enable_whatsapp_notifications', 'false', 'boolean', 'Enable WhatsApp notifications globally');
 
 -- Insert default system settings
 INSERT OR IGNORE INTO system_settings (id) VALUES (1);

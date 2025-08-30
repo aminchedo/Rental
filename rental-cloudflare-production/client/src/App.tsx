@@ -10,7 +10,7 @@ import ContractFormPage from './pages/ContractFormPage';
 import TenantViewPage from './pages/TenantViewPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
-import FinancialReportsPage from './pages/FinancialReportsPage';
+import FinancialsPage from './pages/FinancialsPage';
 import Header from './components/Header';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -302,9 +302,9 @@ const AppContent: React.FC = () => {
           </div>
         )}
 
-        {currentView === 'financial-reports' && currentUser?.role === 'admin' && (
+        {currentView === 'financials' && currentUser?.role === 'admin' && (
           <div className="animate-fade-in">
-            <FinancialReportsPage
+            <FinancialsPage
               addNotification={addNotification}
             />
           </div>

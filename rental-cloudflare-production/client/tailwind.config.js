@@ -8,8 +8,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['Tahoma', 'Arial', 'sans-serif'],
-        'persian': ['Tahoma', 'Vazir', 'Arial', 'sans-serif']
+        'sans': ['Vazirmatn', 'Tahoma', 'Arial', 'sans-serif'],
+        'persian': ['Vazirmatn', 'Tahoma', 'Arial', 'sans-serif'],
+        'display': ['Vazirmatn', 'Tahoma', 'Arial', 'sans-serif']
       },
       colors: {
         primary: {
