@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  TrendingUp, TrendingDown, DollarSign, Calendar, 
-  PieChart, BarChart3, RefreshCw, Plus, Edit, Trash2, Eye 
+    TrendingUp, TrendingDown, DollarSign,
+  BarChart3, RefreshCw, Plus, Edit, Trash2 
 } from 'lucide-react';
 import ExpenseChart from '../components/ExpenseChart';
 import ExpenseForm from '../components/ExpenseForm';

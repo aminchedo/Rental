@@ -3,7 +3,7 @@ import { api, endpoints } from '../config/api';
 
 interface User {
   id: string;
-  role: 'admin' | 'tenant';
+  role: 'admin' | 'tenant' | 'landlord';
   name: string;
   username?: string;
   contractNumber?: string;

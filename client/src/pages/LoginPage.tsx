@@ -42,6 +42,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
         }
         
         const tenantUser = {
+          id: contract.id || `tenant_${Date.now()}`,
           role: 'tenant' as const,
           name: contract.tenantName,
           contractNumber: contract.contractNumber,

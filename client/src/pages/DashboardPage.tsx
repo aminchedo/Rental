@@ -7,9 +7,9 @@ import { useContracts } from '../context/ContractContext';
 import IncomeChart from '../components/IncomeChart';
 import StatusPieChart from '../components/StatusPieChart';
 import ExpenseChart from '../components/ExpenseChart';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { SkeletonCard, SkeletonChart, SkeletonTable } from '../components/SkeletonLoader';
-import { useLoading } from '../hooks/useLoading';
+// import LoadingSpinner from '../components/LoadingSpinner';
+import { SkeletonChart } from '../components/SkeletonLoader';
+// import { useLoading } from '../hooks/useLoading';
 import { api, endpoints } from '../config/api';
 
 interface DashboardPageProps {
@@ -40,9 +40,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [incomeData, setIncomeData] = useState([]);
   const [statusData, setStatusData] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
+  // const [expensesData, setExpensesData] = useState([]);
   const [expensesSummary, setExpensesSummary] = useState([]);
   const [chartsLoading, setChartsLoading] = useState(true);
-  const { loadingStates, setLoading, isLoading, withLoading } = useLoading();
+  // const { loadingStates, setLoading, isLoading, withLoading } = useLoading();
 
   // Fetch chart data
   useEffect(() => {
@@ -57,7 +58,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         setIncomeData(incomeResponse.data);
         setStatusData(statusResponse.data);
         // For now, set empty data for expenses until we implement expense endpoints
-        setExpensesData([]);
+        setExpenseData([]);
         setExpensesSummary([]);
       } catch (error) {
         console.error('Error fetching chart data:', error);

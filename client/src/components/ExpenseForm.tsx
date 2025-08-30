@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, X, DollarSign, Calendar, FileText, Tag, AlertCircle } from 'lucide-react';
+import { Save, X, DollarSign, Calendar, FileText, Tag, AlertCircle } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 import axios from 'axios';
 

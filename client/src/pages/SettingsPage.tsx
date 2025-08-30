@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Settings, Mail, MessageCircle, Phone, TestTube, 
-  Check, X, AlertCircle, Save, RefreshCw, ChevronRight
+  Check, X, AlertCircle, RefreshCw
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { SkeletonCard } from '../components/SkeletonLoader';
+// import { SkeletonCard } from '../components/SkeletonLoader';
 import { api, endpoints } from '../config/api';
 
 interface SettingsPageProps {
@@ -64,9 +64,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ addNotification }) => {
     try {
       // For now, return default statuses since this endpoint isn't implemented in the Worker yet
       setServiceStatuses({
-        email: 'disconnected',
-        telegram: 'disconnected', 
-        whatsapp: 'disconnected'
+        email: { enabled: false, configured: false },
+        telegram: { enabled: false, configured: false },
+        whatsapp: { enabled: false, configured: false }
       });
     } catch (error) {
       console.error('Error fetching service statuses:', error);

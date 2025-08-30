@@ -164,7 +164,7 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
     try {
       const response = await api.get(`/api/tenant/lookup/${nationalId}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       if (error.response?.status === 404) {
         return null; // No tenant found, which is fine for new tenants
       }
@@ -178,7 +178,7 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
     try {
       const response = await api.get(`/api/landlord/lookup/${nationalId}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       if (error.response?.status === 404) {
         return null; // No landlord found, which is fine for new landlords
       }

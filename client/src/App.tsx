@@ -39,6 +39,7 @@ const AppContent: React.FC = () => {
 
   const handleTenantLogin = (contract: any) => {
     const tenantUser = {
+      id: contract.id || `tenant_${Date.now()}`,
       role: 'tenant' as const,
       name: contract.tenantName,
       contractNumber: contract.contractNumber,
