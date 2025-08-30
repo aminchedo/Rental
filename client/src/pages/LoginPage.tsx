@@ -16,14 +16,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
   const { fetchContracts, getContractByCredentials } = useContracts();
 
   const handleAdminLogin = async () => {
-    const { contractNumber: username, accessCode: password } = loginForm;
-    const success = await login({ contractNumber: username, accessCode: password }, 'admin');
-    
-    if (success) {
-      await fetchContracts();
-      addNotification('مدیر سیستم با موفقیت وارد شد', 'success');
-    } else {
-      toast.error('نام کاربری یا رمز عبور مدیر اشتباه است');
+    setIsLoading(true);
+    try {
+      // Use real admin credentials for production
+      const success = await login({ 
+        username: loginForm.contractNumber || 'admin', 
+        password: loginForm.accessCode || 'admin' 
+      }, 'admin');
+      
+      if (success) {
+        await fetchContracts();
+        addNotification('مدیر سیستم با موفقیت وارد شد', 'success');
+      }
+    } catch (error) {
+      console.error('Admin login error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -32,32 +40,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
     setIsLoading(true);
     
     try {
-      await fetchContracts();
-      const contract = getContractByCredentials(contractNumber, accessCode);
+      // Use real API tenant login
+      const success = await login({ contractNumber, accessCode }, 'tenant');
       
-      if (contract) {
-        if (contract.status === 'signed') {
-          toast.error('این قرارداد قبلاً امضا شده و دیگر قابل دسترسی نیست');
-          return;
+      if (success) {
+        await fetchContracts();
+        // The login function already handles setting the user and authentication
+        // Just trigger the tenant view if needed
+        const contract = getContractByCredentials(contractNumber, accessCode);
+        if (contract) {
+          onTenantLogin(contract);
         }
-        
-        const tenantUser = {
-          id: contract.id || `tenant_${Date.now()}`,
-          role: 'tenant' as const,
-          name: contract.tenantName,
-          contractNumber: contract.contractNumber,
-          contract: contract
-        };
-        setCurrentUser(tenantUser);
-        setAuthenticated(true);
-        onTenantLogin(contract);
-        addNotification(`مستأجر ${contract.tenantName} وارد شد`, 'success');
-      } else {
-        toast.error('شماره قرارداد یا کد دسترسی اشتباه است یا قرارداد منقضی شده');
       }
     } catch (error) {
       console.error('Error during tenant login:', error);
-      toast.error('خطا در ورود به سیستم');
     } finally {
       setIsLoading(false);
     }

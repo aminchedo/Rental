@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api, endpoints } from '../config/api';
+import { apiHelpers } from '../config/api';
+import toast from 'react-hot-toast';
 
 interface User {
   id: string;
@@ -10,10 +11,17 @@ interface User {
   contract?: any;
 }
 
+interface LoginCredentials {
+  username?: string;
+  password?: string;
+  contractNumber?: string;
+  accessCode?: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: User | null;
-  login: (credentials: { contractNumber: string; accessCode: string }, userType: 'admin' | 'tenant') => Promise<boolean>;
+  login: (credentials: LoginCredentials, userType: 'admin' | 'tenant') => Promise<boolean>;
   logout: () => void;
   setCurrentUser: (user: User | null) => void;
   setAuthenticated: (authenticated: boolean) => void;
@@ -39,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check for existing token on mount
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('auth_token');
     const user = localStorage.getItem('user');
     
     if (token && user) {
@@ -49,53 +57,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
       } catch (error) {
         // Invalid stored data, clear it
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
       }
     }
   }, []);
 
-  const login = async (credentials: { contractNumber: string; accessCode: string }, userType: 'admin' | 'tenant'): Promise<boolean> => {
-    const { contractNumber, accessCode } = credentials;
-
+  const login = async (credentials: LoginCredentials, userType: 'admin' | 'tenant'): Promise<boolean> => {
     try {
-      let loginData;
+      let response;
       
       if (userType === 'admin') {
-        loginData = {
-          username: contractNumber,
-          password: accessCode
-        };
+        // Admin login with real credentials (admin/admin)
+        const { username = 'admin', password = 'admin' } = credentials;
+        response = await apiHelpers.adminLogin(username, password);
       } else {
-        loginData = {
-          contractNumber,
-          accessCode
-        };
+        // Tenant login with contract number and access code
+        const { contractNumber, accessCode } = credentials;
+        if (!contractNumber || !accessCode) {
+          toast.error('شماره قرارداد و کد دسترسی الزامی است');
+          return false;
+        }
+        response = await apiHelpers.tenantLogin(contractNumber, accessCode);
       }
 
-      const response = await api.post(endpoints.login, loginData);
-
-      if (response.data.success && response.data.token) {
-        // Store JWT token
-        localStorage.setItem('authToken', response.data.token);
+      if (response.success && response.token) {
+        // Store JWT token with correct key
+        localStorage.setItem('auth_token', response.token);
         
         let user: User;
         
         if (userType === 'admin') {
           user = {
-            id: response.data.user.id,
+            id: response.user?.id || 'admin_1',
             role: 'admin',
             name: 'مدیر سیستم',
-            username: response.data.user.username
+            username: response.user?.username || 'admin'
           };
+          toast.success('ورود موفقیت‌آمیز مدیر سیستم');
         } else {
+          // Handle tenant login response
+          const contract = response.contract || response.user?.contract;
           user = {
-            id: response.data.contract.id,
+            id: contract?.id || `tenant_${Date.now()}`,
             role: 'tenant',
-            name: 'مستأجر',
-            contractNumber: response.data.contract.contractNumber,
-            contract: response.data.contract
+            name: contract?.tenant_name || 'مستأجر',
+            contractNumber: contract?.contract_number,
+            contract: contract
           };
+          toast.success('ورود موفقیت‌آمیز مستأجر');
         }
         
         // Store user data
@@ -106,21 +116,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return true;
       }
       
+      toast.error('اطلاعات ورود نادرست است');
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      
+      // Handle specific error messages
+      if (error.response?.status === 401) {
+        toast.error('نام کاربری یا رمز عبور اشتباه است');
+      } else if (error.response?.status === 404) {
+        toast.error('قرارداد یافت نشد');
+      } else {
+        toast.error('خطا در ورود. لطفا دوباره تلاش کنید');
+      }
+      
       return false;
     }
   };
 
   const logout = () => {
-    // Clear stored data
-    localStorage.removeItem('authToken');
+    // Clear stored data with correct key
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     
     // Update state
     setIsAuthenticated(false);
     setCurrentUser(null);
+    
+    toast.success('خروج موفقیت‌آمیز');
   };
 
   const setAuthenticated = (authenticated: boolean) => {

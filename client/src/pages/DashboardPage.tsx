@@ -10,7 +10,7 @@ import ExpenseChart from '../components/ExpenseChart';
 // import LoadingSpinner from '../components/LoadingSpinner';
 import { SkeletonChart } from '../components/SkeletonLoader';
 // import { useLoading } from '../hooks/useLoading';
-import { api, endpoints } from '../config/api';
+import { apiHelpers } from '../config/api';
 
 interface DashboardPageProps {
   onEditContract: (contract: any) => void;
@@ -45,24 +45,46 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [chartsLoading, setChartsLoading] = useState(true);
   // const { loadingStates, setLoading, isLoading, withLoading } = useLoading();
 
-  // Fetch chart data
+  // Fetch chart data from production API
   useEffect(() => {
     const fetchChartData = async () => {
       try {
         setChartsLoading(true);
+        
+        // Fetch real chart data from Cloudflare API
         const [incomeResponse, statusResponse] = await Promise.all([
-          api.get(endpoints.incomeChart),
-          api.get(endpoints.statusChart)
+          apiHelpers.getIncomeChart(),
+          apiHelpers.getStatusChart()
         ]);
         
-        setIncomeData(incomeResponse.data);
-        setStatusData(statusResponse.data);
+        // Set chart data from production API
+        if (incomeResponse.success) {
+          setIncomeData(incomeResponse.data || []);
+        } else {
+          console.warn('Income chart API returned no data');
+          setIncomeData([]);
+        }
+        
+        if (statusResponse.success) {
+          setStatusData(statusResponse.data || []);
+        } else {
+          console.warn('Status chart API returned no data');
+          setStatusData([]);
+        }
+        
         // For now, set empty data for expenses until we implement expense endpoints
         setExpenseData([]);
         setExpensesSummary([]);
+        
       } catch (error) {
         console.error('Error fetching chart data:', error);
         addNotification('خطا در بارگذاری نمودارها', 'error');
+        
+        // Set empty data on error to prevent UI crashes
+        setIncomeData([]);
+        setStatusData([]);
+        setExpenseData([]);
+        setExpensesSummary([]);
       } finally {
         setChartsLoading(false);
       }
