@@ -9,6 +9,8 @@ import DashboardPage from './pages/DashboardPage';
 import ContractFormPage from './pages/ContractFormPage';
 import TenantViewPage from './pages/TenantViewPage';
 import NotificationsPage from './pages/NotificationsPage';
+import SettingsPage from './pages/SettingsPage';
+import FinancialReportsPage from './pages/FinancialReportsPage';
 import Header from './components/Header';
 
 interface Notification {
@@ -222,6 +224,18 @@ const AppContent: React.FC = () => {
           <NotificationsPage
             notifications={notifications}
             onClearNotifications={() => setNotifications([])}
+          />
+        )}
+
+        {currentView === 'settings' && currentUser?.role === 'landlord' && (
+          <SettingsPage
+            addNotification={addNotification}
+          />
+        )}
+
+        {currentView === 'financial-reports' && currentUser?.role === 'landlord' && (
+          <FinancialReportsPage
+            addNotification={addNotification}
           />
         )}
       </main>

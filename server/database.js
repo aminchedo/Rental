@@ -80,6 +80,50 @@ class Database {
         this.migrateExistingData();
       }
     });
+
+    // Create notification_settings table
+    const createNotificationSettingsTable = `
+      CREATE TABLE IF NOT EXISTS notification_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        service_name TEXT UNIQUE NOT NULL,
+        enabled BOOLEAN DEFAULT 0,
+        config TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    this.db.run(createNotificationSettingsTable, (err) => {
+      if (err) {
+        console.error('Error creating notification_settings table:', err.message);
+      } else {
+        console.log('Notification settings table ready.');
+        this.initializeNotificationSettings();
+      }
+    });
+
+    // Create expenses table
+    const createExpensesTable = `
+      CREATE TABLE IF NOT EXISTS expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contract_id TEXT,
+        amount REAL NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT DEFAULT 'عمومی',
+        date TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_by TEXT DEFAULT 'admin',
+        FOREIGN KEY (contract_id) REFERENCES contracts (id)
+      )
+    `;
+
+    this.db.run(createExpensesTable, (err) => {
+      if (err) {
+        console.error('Error creating expenses table:', err.message);
+      } else {
+        console.log('Expenses table ready.');
+      }
+    });
   }
 
   createDefaultAdmin() {
@@ -311,6 +355,149 @@ class Database {
     // Simple conversion - in a real app you'd want proper Jalali conversion
     const monthIndex = parseInt(month) - 1;
     return `${monthNames[monthIndex] || month} ${year}`;
+  }
+
+  // Initialize default notification settings
+  initializeNotificationSettings() {
+    const defaultSettings = [
+      { service_name: 'email', enabled: 1, config: '{}' },
+      { service_name: 'telegram', enabled: 0, config: '{}' },
+      { service_name: 'whatsapp', enabled: 0, config: '{}' }
+    ];
+
+    defaultSettings.forEach(setting => {
+      this.db.run(
+        'INSERT OR IGNORE INTO notification_settings (service_name, enabled, config) VALUES (?, ?, ?)',
+        [setting.service_name, setting.enabled, setting.config],
+        (err) => {
+          if (err) {
+            console.error(`Error initializing ${setting.service_name} settings:`, err.message);
+          }
+        }
+      );
+    });
+  }
+
+  // Notification Settings Methods
+  getNotificationSettings(callback) {
+    const sql = 'SELECT * FROM notification_settings ORDER BY service_name';
+    this.db.all(sql, [], callback);
+  }
+
+  updateNotificationSetting(serviceName, enabled, config, callback) {
+    const sql = `
+      UPDATE notification_settings 
+      SET enabled = ?, config = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE service_name = ?
+    `;
+    this.db.run(sql, [enabled, JSON.stringify(config), serviceName], callback);
+  }
+
+  getNotificationSetting(serviceName, callback) {
+    const sql = 'SELECT * FROM notification_settings WHERE service_name = ?';
+    this.db.get(sql, [serviceName], callback);
+  }
+
+  // Expenses Methods
+  addExpense(expenseData, callback) {
+    const { contract_id, amount, description, category, date, created_by } = expenseData;
+    const sql = `
+      INSERT INTO expenses (contract_id, amount, description, category, date, created_by)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    this.db.run(sql, [contract_id, amount, description, category, date, created_by], function(err) {
+      callback(err, err ? null : { id: this.lastID, ...expenseData });
+    });
+  }
+
+  getExpenses(callback) {
+    const sql = `
+      SELECT e.*, c.contractNumber, c.tenantName 
+      FROM expenses e
+      LEFT JOIN contracts c ON e.contract_id = c.id
+      ORDER BY e.date DESC, e.created_at DESC
+    `;
+    this.db.all(sql, [], callback);
+  }
+
+  getExpensesByContract(contractId, callback) {
+    const sql = `
+      SELECT e.*, c.contractNumber, c.tenantName 
+      FROM expenses e
+      LEFT JOIN contracts c ON e.contract_id = c.id
+      WHERE e.contract_id = ?
+      ORDER BY e.date DESC, e.created_at DESC
+    `;
+    this.db.all(sql, [contractId], callback);
+  }
+
+  getExpenseById(id, callback) {
+    const sql = `
+      SELECT e.*, c.contractNumber, c.tenantName 
+      FROM expenses e
+      LEFT JOIN contracts c ON e.contract_id = c.id
+      WHERE e.id = ?
+    `;
+    this.db.get(sql, [id], callback);
+  }
+
+  updateExpense(id, expenseData, callback) {
+    const { contract_id, amount, description, category, date } = expenseData;
+    const sql = `
+      UPDATE expenses 
+      SET contract_id = ?, amount = ?, description = ?, category = ?, date = ?
+      WHERE id = ?
+    `;
+    this.db.run(sql, [contract_id, amount, description, category, date, id], callback);
+  }
+
+  deleteExpense(id, callback) {
+    const sql = 'DELETE FROM expenses WHERE id = ?';
+    this.db.run(sql, [id], callback);
+  }
+
+  getExpensesSummary(callback) {
+    const sql = `
+      SELECT 
+        category,
+        COUNT(*) as count,
+        SUM(amount) as total,
+        AVG(amount) as average
+      FROM expenses 
+      GROUP BY category
+      ORDER BY total DESC
+    `;
+    this.db.all(sql, [], callback);
+  }
+
+  getMonthlyExpenses(callback) {
+    const sql = `
+      SELECT 
+        strftime('%Y', date) as year,
+        strftime('%m', date) as month,
+        SUM(amount) as expenses,
+        COUNT(*) as count
+      FROM expenses 
+      WHERE date >= date('now', '-12 months')
+      GROUP BY strftime('%Y-%m', date)
+      ORDER BY year, month
+    `;
+    
+    this.db.all(sql, [], (err, rows) => {
+      if (err) {
+        callback(err, null);
+        return;
+      }
+      
+      // Format data for chart display
+      const formattedData = rows.map(row => ({
+        month: this.formatPersianMonth(`${row.year}-${row.month}`),
+        expenses: parseInt(row.expenses) || 0,
+        count: row.count
+      })).reverse(); // Reverse to show chronological order
+      
+      callback(null, formattedData);
+    });
   }
 
   close() {

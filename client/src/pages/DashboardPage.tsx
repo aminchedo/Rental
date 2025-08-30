@@ -6,6 +6,7 @@ import {
 import { useContracts } from '../context/ContractContext';
 import IncomeChart from '../components/IncomeChart';
 import StatusPieChart from '../components/StatusPieChart';
+import ExpenseChart from '../components/ExpenseChart';
 import axios from 'axios';
 
 interface DashboardPageProps {
@@ -35,6 +36,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const [incomeData, setIncomeData] = useState([]);
   const [statusData, setStatusData] = useState([]);
+  const [expenseData, setExpenseData] = useState([]);
   const [chartsLoading, setChartsLoading] = useState(true);
 
   // Fetch chart data
@@ -42,13 +44,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     const fetchChartData = async () => {
       try {
         setChartsLoading(true);
-        const [incomeResponse, statusResponse] = await Promise.all([
+        const [incomeResponse, statusResponse, expenseResponse] = await Promise.all([
           axios.get('http://localhost:5001/api/charts/income', { withCredentials: true }),
-          axios.get('http://localhost:5001/api/charts/status', { withCredentials: true })
+          axios.get('http://localhost:5001/api/charts/status', { withCredentials: true }),
+          axios.get('http://localhost:5001/api/charts/expenses/monthly', { withCredentials: true })
         ]);
         
         setIncomeData(incomeResponse.data);
         setStatusData(statusResponse.data);
+        setExpenseData(expenseResponse.data);
       } catch (error) {
         console.error('Error fetching chart data:', error);
         addNotification('خطا در بارگذاری نمودارها', 'error');
@@ -147,6 +151,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="xl:col-span-1">
           <StatusPieChart data={statusData} isLoading={chartsLoading} />
         </div>
+      </div>
+
+      {/* Expense Chart Section */}
+      <div className="grid grid-cols-1 gap-6">
+        <ExpenseChart data={expenseData} isLoading={chartsLoading} />
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">

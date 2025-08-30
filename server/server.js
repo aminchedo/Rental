@@ -234,23 +234,24 @@ app.post('/api/contracts/:contractNumber/sign', async (req, res) => {
           return res.status(500).json({ error: 'Failed to sign contract' });
         }
 
-        // Send email notification to landlord
+        // Send multi-channel notifications to landlord
         try {
-          const emailResult = await sendContractSignedEmail(
-            contract.landlordEmail,
-            contract.landlordName,
-            contract.tenantName,
-            contractNumber
-          );
+          const notificationResult = await notificationController.sendContractSignedNotifications({
+            landlordEmail: contract.landlordEmail,
+            landlordName: contract.landlordName,
+            tenantName: contract.tenantName,
+            contractNumber: contractNumber,
+            landlordPhone: contract.landlordPhone
+          });
 
-          if (emailResult.success) {
-            console.log('Contract signed and email sent successfully');
+          if (notificationResult.success) {
+            console.log(`Contract signed and ${notificationResult.summary.successful}/${notificationResult.summary.total} notifications sent successfully`);
           } else {
-            console.error('Contract signed but email failed:', emailResult.error);
+            console.error('Contract signed but all notifications failed:', notificationResult.results);
           }
-        } catch (emailError) {
-          console.error('Email sending error:', emailError);
-          // Continue with success response even if email fails
+        } catch (notificationError) {
+          console.error('Notification sending error:', notificationError);
+          // Continue with success response even if notifications fail
         }
 
         res.json({ success: true, message: 'Contract signed successfully' });
@@ -333,6 +334,163 @@ app.get('/api/charts/status', requireAuth, (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
     res.json(data || []);
+  });
+});
+
+// Notification endpoints
+const notificationController = require('./notificationController');
+
+// Test notification services
+app.post('/api/notifications/test/:service', requireAuth, async (req, res) => {
+  const { service } = req.params;
+  
+  try {
+    const result = await notificationController.testServiceConnection(service);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Test all notification services
+app.get('/api/notifications/test', requireAuth, async (req, res) => {
+  try {
+    const results = await notificationController.testAllConnections();
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get notification service status
+app.get('/api/notifications/status', requireAuth, (req, res) => {
+  try {
+    const status = notificationController.getServiceStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Settings endpoints
+app.get('/api/settings/notifications', requireAuth, (req, res) => {
+  database.getNotificationSettings((err, settings) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(settings);
+  });
+});
+
+app.put('/api/settings/notifications/:service', requireAuth, (req, res) => {
+  const { service } = req.params;
+  const { enabled, config } = req.body;
+  
+  database.updateNotificationSetting(service, enabled, config, (err) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true, message: `تنظیمات ${service} به‌روزرسانی شد` });
+  });
+});
+
+// Expenses endpoints
+app.get('/api/expenses', requireAuth, (req, res) => {
+  database.getExpenses((err, expenses) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(expenses);
+  });
+});
+
+app.post('/api/expenses', requireAuth, (req, res) => {
+  const expenseData = {
+    ...req.body,
+    created_by: req.session.user.username
+  };
+  
+  database.addExpense(expenseData, (err, expense) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(expense);
+  });
+});
+
+app.get('/api/expenses/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  
+  database.getExpenseById(id, (err, expense) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (!expense) {
+      res.status(404).json({ error: 'هزینه یافت نشد' });
+      return;
+    }
+    res.json(expense);
+  });
+});
+
+app.put('/api/expenses/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  
+  database.updateExpense(id, req.body, (err) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true, message: 'هزینه به‌روزرسانی شد' });
+  });
+});
+
+app.delete('/api/expenses/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  
+  database.deleteExpense(id, (err) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ success: true, message: 'هزینه حذف شد' });
+  });
+});
+
+app.get('/api/expenses/contract/:contractId', requireAuth, (req, res) => {
+  const { contractId } = req.params;
+  
+  database.getExpensesByContract(contractId, (err, expenses) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(expenses);
+  });
+});
+
+app.get('/api/charts/expenses/summary', requireAuth, (req, res) => {
+  database.getExpensesSummary((err, summary) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(summary);
+  });
+});
+
+app.get('/api/charts/expenses/monthly', requireAuth, (req, res) => {
+  database.getMonthlyExpenses((err, data) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(data);
   });
 });
 
