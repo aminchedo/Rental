@@ -1,0 +1,26 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"npm run start-server\" \"npm run start-client\"",
+    "start-server": "cd server && npm start",
+    "start-client": "cd client && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aminchedo/Rental.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aminchedo/Rental/issues"
+  },
+  "homepage": "https://github.com/aminchedo/Rental#readme",
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
