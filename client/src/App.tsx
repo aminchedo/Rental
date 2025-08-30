@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import './styles/animations.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ContractProvider } from './context/ContractContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -195,48 +196,60 @@ const AppContent: React.FC = () => {
         notifications={notifications}
       />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-8">
         {currentView === 'dashboard' && currentUser?.role === 'landlord' && (
-          <DashboardPage
-            onEditContract={handleEditContract}
-            onGeneratePDF={generatePDF}
-            onResendAccessCode={handleResendAccessCode}
-            addNotification={addNotification}
-          />
+          <div className="animate-fade-in">
+            <DashboardPage
+              onEditContract={handleEditContract}
+              onGeneratePDF={generatePDF}
+              onResendAccessCode={handleResendAccessCode}
+              addNotification={addNotification}
+            />
+          </div>
         )}
 
         {currentView === 'form' && (
-          <ContractFormPage
-            selectedContract={selectedContract}
-            onNavigateToDashboard={() => setCurrentView('dashboard')}
-            addNotification={addNotification}
-          />
+          <div className="animate-fade-in">
+            <ContractFormPage
+              selectedContract={selectedContract}
+              onNavigateToDashboard={() => setCurrentView('dashboard')}
+              addNotification={addNotification}
+            />
+          </div>
         )}
 
         {currentView === 'tenant-view' && currentUser?.role === 'tenant' && (
-          <TenantViewPage
-            contract={currentUser.contract}
-            addNotification={addNotification}
-          />
+          <div className="animate-fade-in">
+            <TenantViewPage
+              contract={currentUser.contract}
+              addNotification={addNotification}
+            />
+          </div>
         )}
 
         {currentView === 'notifications' && currentUser?.role === 'landlord' && (
-          <NotificationsPage
-            notifications={notifications}
-            onClearNotifications={() => setNotifications([])}
-          />
+          <div className="animate-fade-in">
+            <NotificationsPage
+              notifications={notifications}
+              onClearNotifications={() => setNotifications([])}
+            />
+          </div>
         )}
 
         {currentView === 'settings' && currentUser?.role === 'landlord' && (
-          <SettingsPage
-            addNotification={addNotification}
-          />
+          <div className="animate-fade-in">
+            <SettingsPage
+              addNotification={addNotification}
+            />
+          </div>
         )}
 
         {currentView === 'financial-reports' && currentUser?.role === 'landlord' && (
-          <FinancialReportsPage
-            addNotification={addNotification}
-          />
+          <div className="animate-fade-in">
+            <FinancialReportsPage
+              addNotification={addNotification}
+            />
+          </div>
         )}
       </main>
     </div>

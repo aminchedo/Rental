@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Settings, Mail, MessageCircle, Phone, TestTube, 
-  Check, X, AlertCircle, Save, RefreshCw 
+  Check, X, AlertCircle, Save, RefreshCw, ChevronRight
 } from 'lucide-react';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { SkeletonCard } from '../components/SkeletonLoader';
 import axios from 'axios';
 
 interface SettingsPageProps {
@@ -232,24 +234,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ addNotification }) => {
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2">
+          {/* Mobile-Optimized Tabs */}
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all min-h-[44px] ${
                 activeTab === 'notifications' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 active:scale-95'
               }`}
             >
               اطلاع‌رسانی
             </button>
             <button
               onClick={() => setActiveTab('system')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all min-h-[44px] ${
                 activeTab === 'system' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 active:scale-95'
               }`}
             >
               سیستم
@@ -261,16 +263,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ addNotification }) => {
         {activeTab === 'notifications' && (
           <div className="space-y-6">
             {/* Test All Services */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">تست اتصال سرویس‌ها</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 lg:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-800 dark:text-white">تست اتصال سرویس‌ها</h2>
                 <button
                   onClick={testAllServices}
                   disabled={testingService === 'all'}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 min-h-[44px] font-medium"
                 >
                   {testingService === 'all' ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <LoadingSpinner size="small" color="white" />
                   ) : (
                     <TestTube className="w-4 h-4" />
                   )}

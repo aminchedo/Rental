@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, CheckCircle, Archive, Star, RefreshCw, Search, 
-  Folder, Copy, Eye, Download, Send, Trash2 
+  Folder, Copy, Eye, Download, Send, Trash2, TrendingUp, DollarSign
 } from 'lucide-react';
 import { useContracts } from '../context/ContractContext';
 import IncomeChart from '../components/IncomeChart';
 import StatusPieChart from '../components/StatusPieChart';
 import ExpenseChart from '../components/ExpenseChart';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { SkeletonCard, SkeletonChart, SkeletonTable } from '../components/SkeletonLoader';
+import { useLoading } from '../hooks/useLoading';
 import axios from 'axios';
 
 interface DashboardPageProps {
@@ -37,22 +40,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [incomeData, setIncomeData] = useState([]);
   const [statusData, setStatusData] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
+  const [expensesSummary, setExpensesSummary] = useState([]);
   const [chartsLoading, setChartsLoading] = useState(true);
+  const { loadingStates, setLoading, isLoading, withLoading } = useLoading();
 
   // Fetch chart data
   useEffect(() => {
     const fetchChartData = async () => {
       try {
         setChartsLoading(true);
-        const [incomeResponse, statusResponse, expenseResponse] = await Promise.all([
+        const [incomeResponse, statusResponse, expenseResponse, expenseSummaryResponse] = await Promise.all([
           axios.get('http://localhost:5001/api/charts/income', { withCredentials: true }),
           axios.get('http://localhost:5001/api/charts/status', { withCredentials: true }),
-          axios.get('http://localhost:5001/api/charts/expenses/monthly', { withCredentials: true })
+          axios.get('http://localhost:5001/api/charts/expenses/monthly', { withCredentials: true }),
+          axios.get('http://localhost:5001/api/charts/expenses/summary', { withCredentials: true })
         ]);
         
         setIncomeData(incomeResponse.data);
         setStatusData(statusResponse.data);
         setExpenseData(expenseResponse.data);
+        setExpensesSummary(expenseSummaryResponse.data);
       } catch (error) {
         console.error('Error fetching chart data:', error);
         addNotification('خطا در بارگذاری نمودارها', 'error');
@@ -104,58 +111,137 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+      {/* Contract Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 dark:border-gray-700 transform hover:scale-105 transition-transform duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کل قراردادها</p>
-              <p className="text-3xl font-bold text-gray-800 dark:text-white">{contracts.length}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 dark:text-gray-400">کل قراردادها</p>
+              <p className="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">{contracts.length}</p>
             </div>
-            <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
+              <FileText className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600 dark:text-blue-400" />
+            </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 dark:border-gray-700 transform hover:scale-105 transition-transform duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">فعال</p>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400">{contracts.filter(c => c.status === 'active').length}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 dark:text-gray-400">فعال</p>
+              <p className="text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400">{contracts.filter(c => c.status === 'active').length}</p>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600 dark:text-green-400" />
+            </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 dark:border-gray-700 transform hover:scale-105 transition-transform duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">امضا شده</p>
-              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{contracts.filter(c => c.status === 'signed').length}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 dark:text-gray-400">امضا شده</p>
+              <p className="text-2xl lg:text-3xl font-bold text-purple-600 dark:text-purple-400">{contracts.filter(c => c.status === 'signed').length}</p>
             </div>
-            <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center">
+              <Star className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600 dark:text-purple-400" />
+            </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 dark:border-gray-700 transform hover:scale-105 transition-transform duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">منقضی</p>
-              <p className="text-3xl font-bold text-red-600 dark:text-red-400">{contracts.filter(c => c.status === 'terminated').length}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 dark:text-gray-400">منقضی</p>
+              <p className="text-2xl lg:text-3xl font-bold text-red-600 dark:text-red-400">{contracts.filter(c => c.status === 'terminated').length}</p>
             </div>
-            <Archive className="w-8 h-8 text-red-600 dark:text-red-400" />
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 dark:bg-red-900/20 rounded-xl flex items-center justify-center">
+              <Archive className="w-5 h-5 lg:w-6 lg:h-6 text-red-600 dark:text-red-400" />
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Financial Summary */}
+      {expensesSummary.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 lg:p-6 shadow-lg border border-green-100 dark:border-green-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs lg:text-sm font-medium text-green-700 dark:text-green-300">درآمد ماهانه</p>
+                <p className="text-xl lg:text-2xl font-bold text-green-800 dark:text-green-200">
+                  {new Intl.NumberFormat('fa-IR').format(
+                    incomeData.reduce((sum: number, item: any) => sum + item.income, 0)
+                  )} تومان
+                </p>
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-200 dark:bg-green-800 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 lg:w-6 lg:h-6 text-green-700 dark:text-green-300" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-2xl p-4 lg:p-6 shadow-lg border border-red-100 dark:border-red-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs lg:text-sm font-medium text-red-700 dark:text-red-300">کل هزینه‌ها</p>
+                <p className="text-xl lg:text-2xl font-bold text-red-800 dark:text-red-200">
+                  {new Intl.NumberFormat('fa-IR').format(
+                    expensesSummary.reduce((sum: number, item: any) => sum + item.total, 0)
+                  )} تومان
+                </p>
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-200 dark:bg-red-800 rounded-xl flex items-center justify-center">
+                <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-red-700 dark:text-red-300" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-4 lg:p-6 shadow-lg border border-blue-100 dark:border-blue-800 col-span-2 lg:col-span-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs lg:text-sm font-medium text-blue-700 dark:text-blue-300">سود خالص</p>
+                <p className="text-xl lg:text-2xl font-bold text-blue-800 dark:text-blue-200">
+                  {new Intl.NumberFormat('fa-IR').format(
+                    incomeData.reduce((sum: number, item: any) => sum + item.income, 0) -
+                    expensesSummary.reduce((sum: number, item: any) => sum + item.total, 0)
+                  )} تومان
+                </p>
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-200 dark:bg-blue-800 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 lg:w-6 lg:h-6 text-blue-700 dark:text-blue-300" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Charts Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
         <div className="xl:col-span-2">
-          <IncomeChart data={incomeData} isLoading={chartsLoading} />
+          {chartsLoading ? (
+            <SkeletonChart />
+          ) : (
+            <div className="transform hover:scale-[1.02] transition-transform duration-300">
+              <IncomeChart data={incomeData} isLoading={chartsLoading} />
+            </div>
+          )}
         </div>
         <div className="xl:col-span-1">
-          <StatusPieChart data={statusData} isLoading={chartsLoading} />
+          {chartsLoading ? (
+            <SkeletonChart />
+          ) : (
+            <div className="transform hover:scale-[1.02] transition-transform duration-300">
+              <StatusPieChart data={statusData} isLoading={chartsLoading} />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Expense Chart Section */}
-      <div className="grid grid-cols-1 gap-6">
-        <ExpenseChart data={expenseData} isLoading={chartsLoading} />
+      <div className="grid grid-cols-1 gap-4 lg:gap-6">
+        {chartsLoading ? (
+          <SkeletonChart />
+        ) : (
+          <div className="transform hover:scale-[1.02] transition-transform duration-300">
+            <ExpenseChart data={expenseData} isLoading={chartsLoading} />
+          </div>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, X, DollarSign, Calendar, FileText, Tag } from 'lucide-react';
+import { Plus, Save, X, DollarSign, Calendar, FileText, Tag, AlertCircle } from 'lucide-react';
+import LoadingSpinner from './LoadingSpinner';
 import axios from 'axios';
 
 interface Contract {
@@ -33,6 +34,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const categories = [
     'عمومی',
@@ -133,55 +135,111 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   };
 
+  const validateField = (name: string, value: string) => {
+    const errors: Record<string, string> = {};
+    
+    switch (name) {
+      case 'amount':
+        if (!value) {
+          errors[name] = 'مبلغ الزامی است';
+        } else if (parseFloat(value) <= 0) {
+          errors[name] = 'مبلغ باید بیشتر از صفر باشد';
+        }
+        break;
+      case 'description':
+        if (!value.trim()) {
+          errors[name] = 'شرح هزینه الزامی است';
+        } else if (value.trim().length < 3) {
+          errors[name] = 'شرح باید حداقل ۳ کاراکتر باشد';
+        }
+        break;
+      case 'date':
+        if (!value) {
+          errors[name] = 'تاریخ الزامی است';
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Real-time validation
+    const fieldErrors = validateField(name, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      ...fieldErrors,
+      ...(Object.keys(fieldErrors).length === 0 ? { [name]: '' } : {})
+    }));
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+              <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-              {editingExpense ? 'ویرایش هزینه' : 'افزودن هزینه جدید'}
-            </h2>
+            <div>
+              <h2 className="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">
+                {editingExpense ? 'ویرایش هزینه' : 'افزودن هزینه جدید'}
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                فیلدهای ستاره‌دار الزامی هستند
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 lg:p-6 space-y-6">
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               مبلغ (تومان) *
             </label>
             <div className="relative">
-              <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="number"
                 name="amount"
                 value={formData.amount}
                 onChange={handleInputChange}
-                className="w-full pr-10 pl-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={`w-full pr-12 pl-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all min-h-[44px] text-base ${
+                  validationErrors.amount 
+                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
                 placeholder="مبلغ هزینه را وارد کنید"
                 required
                 min="0"
                 step="0.01"
               />
+              {validationErrors.amount && (
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                </div>
+              )}
             </div>
+            {validationErrors.amount && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {validationErrors.amount}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -190,17 +248,32 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               شرح هزینه *
             </label>
             <div className="relative">
-              <FileText className="absolute right-3 top-3 text-gray-400 w-4 h-4" />
+              <FileText className="absolute right-3 top-3 text-gray-400 w-5 h-5" />
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full pr-10 pl-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                className={`w-full pr-12 pl-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none transition-all text-base ${
+                  validationErrors.description 
+                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500' 
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
                 placeholder="توضیحات هزینه را وارد کنید"
                 required
               />
+              {validationErrors.description && (
+                <div className="absolute left-3 top-3">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                </div>
+              )}
             </div>
+            {validationErrors.description && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {validationErrors.description}
+              </p>
+            )}
           </div>
 
           {/* Category */}
@@ -268,20 +341,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 -mx-4 lg:-mx-6 px-4 lg:px-6 py-4">
             <button
               type="submit"
-              disabled={submitting}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              disabled={submitting || Object.values(validationErrors).some(error => error)}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 min-h-[44px] font-medium shadow-lg"
             >
               {submitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <LoadingSpinner size="small" color="white" />
                   در حال ثبت...
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
+                  <Save className="w-5 h-5" />
                   {editingExpense ? 'به‌روزرسانی' : 'ثبت هزینه'}
                 </>
               )}
@@ -289,7 +362,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all"
+              disabled={submitting}
+              className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all active:scale-95 min-h-[44px] font-medium border border-gray-300 dark:border-gray-600"
             >
               انصراف
             </button>

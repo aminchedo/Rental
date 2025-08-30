@@ -55,12 +55,12 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, isLoading = false }) 
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 lg:mb-6">
+        <h3 className="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">
           نمودار هزینه‌های ماهانه
         </h3>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3 lg:gap-4 text-xs lg:text-sm">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
             <span className="text-gray-600 dark:text-gray-400">هزینه</span>
@@ -72,9 +72,9 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, isLoading = false }) 
         </div>
       </div>
       
-      <div className="h-80">
+      <div className="h-64 lg:h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <AreaChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
             <defs>
               <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
