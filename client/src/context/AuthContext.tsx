@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5001/api';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { api, endpoints } from '../config/api';
 
 interface User {
-  role: 'landlord' | 'tenant';
+  id: string;
+  role: 'admin' | 'tenant';
   name: string;
+  username?: string;
   contractNumber?: string;
   contract?: any;
 }
@@ -37,48 +37,90 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  // Check for existing token on mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      try {
+        const parsedUser = JSON.parse(user);
+        setCurrentUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        // Invalid stored data, clear it
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
+
   const login = async (credentials: { contractNumber: string; accessCode: string }, userType: 'admin' | 'tenant'): Promise<boolean> => {
     const { contractNumber, accessCode } = credentials;
 
-    if (userType === 'admin') {
-      try {
-        const response = await axios.post(`${API_URL}/login`, {
+    try {
+      let loginData;
+      
+      if (userType === 'admin') {
+        loginData = {
           username: contractNumber,
           password: accessCode
-        }, {
-          withCredentials: true
-        });
-
-        if (response.data.success) {
-          const adminUser = { 
-            role: 'landlord' as const, 
-            name: 'مدیر سیستم' 
-          };
-          setCurrentUser(adminUser);
-          setIsAuthenticated(true);
-          return true;
-        }
-        return false;
-      } catch (error) {
-        console.error('Admin login error:', error);
-        return false;
+        };
+      } else {
+        loginData = {
+          contractNumber,
+          accessCode
+        };
       }
+
+      const response = await api.post(endpoints.login, loginData);
+
+      if (response.data.success && response.data.token) {
+        // Store JWT token
+        localStorage.setItem('authToken', response.data.token);
+        
+        let user: User;
+        
+        if (userType === 'admin') {
+          user = {
+            id: response.data.user.id,
+            role: 'admin',
+            name: 'مدیر سیستم',
+            username: response.data.user.username
+          };
+        } else {
+          user = {
+            id: response.data.contract.id,
+            role: 'tenant',
+            name: 'مستأجر',
+            contractNumber: response.data.contract.contractNumber,
+            contract: response.data.contract
+          };
+        }
+        
+        // Store user data
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    return false;
   };
 
-  const logout = async () => {
-    try {
-      await axios.post(`${API_URL}/logout`, {}, {
-        withCredentials: true
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-    }
+  const logout = () => {
+    // Clear stored data
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    
+    // Update state
+    setIsAuthenticated(false);
+    setCurrentUser(null);
   };
 
   const setAuthenticated = (authenticated: boolean) => {

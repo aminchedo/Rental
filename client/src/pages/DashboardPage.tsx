@@ -10,7 +10,7 @@ import ExpenseChart from '../components/ExpenseChart';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { SkeletonCard, SkeletonChart, SkeletonTable } from '../components/SkeletonLoader';
 import { useLoading } from '../hooks/useLoading';
-import axios from 'axios';
+import { api, endpoints } from '../config/api';
 
 interface DashboardPageProps {
   onEditContract: (contract: any) => void;
@@ -49,17 +49,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     const fetchChartData = async () => {
       try {
         setChartsLoading(true);
-        const [incomeResponse, statusResponse, expenseResponse, expenseSummaryResponse] = await Promise.all([
-          axios.get('http://localhost:5001/api/charts/income', { withCredentials: true }),
-          axios.get('http://localhost:5001/api/charts/status', { withCredentials: true }),
-          axios.get('http://localhost:5001/api/charts/expenses/monthly', { withCredentials: true }),
-          axios.get('http://localhost:5001/api/charts/expenses/summary', { withCredentials: true })
+        const [incomeResponse, statusResponse] = await Promise.all([
+          api.get(endpoints.incomeChart),
+          api.get(endpoints.statusChart)
         ]);
         
         setIncomeData(incomeResponse.data);
         setStatusData(statusResponse.data);
-        setExpenseData(expenseResponse.data);
-        setExpensesSummary(expenseSummaryResponse.data);
+        // For now, set empty data for expenses until we implement expense endpoints
+        setExpensesData([]);
+        setExpensesSummary([]);
       } catch (error) {
         console.error('Error fetching chart data:', error);
         addNotification('خطا در بارگذاری نمودارها', 'error');

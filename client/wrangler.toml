@@ -1,0 +1,33 @@
+name = "rental-management-frontend"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "dist"
+
+# Build configuration for Cloudflare Pages
+[build]
+command = "npm run build"
+cwd = "."
+
+# Environment variables for different environments
+[env.production.vars]
+VITE_API_URL = "https://rental-management-api.your-subdomain.workers.dev"
+VITE_ENVIRONMENT = "production"
+
+[env.preview.vars]
+VITE_API_URL = "https://rental-management-api-dev.your-subdomain.workers.dev"
+VITE_ENVIRONMENT = "preview"
+
+# Custom headers for Persian RTL support and security
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://rental-management-api.your-subdomain.workers.dev"
+
+# Redirect rules for SPA routing
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

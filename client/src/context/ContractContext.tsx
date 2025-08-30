@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
-
-const API_URL = 'http://localhost:5001/api';
+import { api, endpoints } from '../config/api';
 
 interface Contract {
   id: string;
@@ -78,9 +76,7 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
   const fetchContracts = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/contracts`, {
-        withCredentials: true
-      });
+      const response = await api.get(endpoints.contracts);
       const serverContracts = response.data || [];
       setContracts(serverContracts);
       filterContracts(serverContracts, searchQuery, statusFilter);
@@ -95,9 +91,7 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
 
   const saveContracts = async (updatedContracts: Contract[]) => {
     try {
-      await axios.post(`${API_URL}/contracts`, updatedContracts, {
-        withCredentials: true
-      });
+      await api.post(endpoints.contracts, updatedContracts);
       setContracts(updatedContracts);
       filterContracts(updatedContracts, searchQuery, statusFilter);
     } catch (error) {
@@ -151,10 +145,8 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
 
   const signContract = async (contractNumber: string, signature: string) => {
     try {
-      const response = await axios.post(`${API_URL}/contracts/${contractNumber}/sign`, {
+      const response = await api.post(endpoints.signContract(contractNumber), {
         signature
-      }, {
-        withCredentials: true
       });
 
       if (response.data.success) {
@@ -170,12 +162,10 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
 
   const lookupTenantByNationalId = async (nationalId: string) => {
     try {
-      const response = await axios.get(`${API_URL}/tenant/lookup/${nationalId}`, {
-        withCredentials: true
-      });
+      const response = await api.get(`/api/tenant/lookup/${nationalId}`);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
+      if (error.response?.status === 404) {
         return null; // No tenant found, which is fine for new tenants
       }
       console.error('Error looking up tenant:', error);
@@ -186,12 +176,10 @@ export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) 
 
   const lookupLandlordByNationalId = async (nationalId: string) => {
     try {
-      const response = await axios.get(`${API_URL}/landlord/lookup/${nationalId}`, {
-        withCredentials: true
-      });
+      const response = await api.get(`/api/landlord/lookup/${nationalId}`);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
+      if (error.response?.status === 404) {
         return null; // No landlord found, which is fine for new landlords
       }
       console.error('Error looking up landlord:', error);
