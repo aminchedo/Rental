@@ -334,7 +334,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               onChange={handleInputChange}
               onBlur={(e) => handleLandlordNationalIdLookup(e.target.value)}
               disabled={currentUser?.role === 'tenant'}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="کد ملی 10 رقمی موجر"
               maxLength={10}
             />
@@ -358,7 +358,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
             value={formData.landlordName}
             onChange={handleInputChange}
             disabled={currentUser?.role === 'tenant'}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="نام کامل موجر"
           />
         </div>
@@ -371,7 +371,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
             value={formData.landlordEmail}
             onChange={handleInputChange}
             disabled={currentUser?.role === 'tenant'}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="landlord@email.com"
           />
         </div>
@@ -397,7 +397,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               onChange={handleInputChange}
               onBlur={(e) => handleTenantNationalIdLookup(e.target.value)}
               disabled={currentUser?.role === 'tenant'}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="کد ملی 10 رقمی مستأجر"
               maxLength={10}
             />
@@ -421,7 +421,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
             value={formData.tenantName}
             onChange={handleInputChange}
             disabled={currentUser?.role === 'tenant'}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="نام کامل مستأجر"
           />
         </div>
@@ -434,7 +434,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
             value={formData.tenantEmail}
             onChange={handleInputChange}
             disabled={currentUser?.role === 'tenant'}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="example@email.com"
           />
         </div>
@@ -447,7 +447,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
             value={formData.tenantPhone}
             onChange={handleInputChange}
             disabled={currentUser?.role === 'tenant'}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="09123456789"
           />
         </div>
@@ -472,7 +472,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               onChange={handleInputChange}
               disabled={currentUser?.role === 'tenant'}
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"
               placeholder="آدرس دقیق ملک مورد اجاره"
             />
           </div>
@@ -484,7 +484,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               value={formData.propertyType}
               onChange={handleInputChange}
               disabled={currentUser?.role === 'tenant'}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="">انتخاب کنید</option>
               <option value="آپارتمان">آپارتمان</option>
@@ -513,7 +513,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               value={formData.rentAmount}
               onChange={handleInputChange}
               disabled={currentUser?.role === 'tenant'}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="5000000"
             />
           </div>
@@ -526,7 +526,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
               value={formData.deposit}
               onChange={handleInputChange}
               disabled={currentUser?.role === 'tenant'}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="50000000"
             />
           </div>
@@ -540,7 +540,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
                 value={formData.startDate}
                 onChange={handleInputChange}
                 disabled={currentUser?.role === 'tenant'}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             
@@ -552,7 +552,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
                 value={formData.endDate}
                 onChange={handleInputChange}
                 disabled={currentUser?.role === 'tenant'}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
           </div>
@@ -763,17 +763,17 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
             <FileText className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
               {currentUser?.role === 'landlord' ? 'ایجاد قرارداد جدید' : 'بررسی و امضای قرارداد'}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               {currentUser?.role === 'landlord' ? 'اطلاعات قرارداد را تکمیل کنید' : 'لطفاً اطلاعات را بررسی و قرارداد را امضا کنید'}
             </p>
           </div>
@@ -782,7 +782,7 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
         {currentUser?.role === 'landlord' && (
           <button
             onClick={onNavigateToDashboard}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2"
           >
             <Home className="w-4 h-4" />
             بازگشت به داشبورد

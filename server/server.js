@@ -315,6 +315,27 @@ app.get('/api/landlord/lookup/:nationalId', (req, res) => {
   });
 });
 
+// Chart data endpoints
+app.get('/api/charts/income', requireAuth, (req, res) => {
+  database.getMonthlyIncomeData((err, data) => {
+    if (err) {
+      console.error('Error fetching income data:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(data || []);
+  });
+});
+
+app.get('/api/charts/status', requireAuth, (req, res) => {
+  database.getContractStatusData((err, data) => {
+    if (err) {
+      console.error('Error fetching status data:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(data || []);
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
