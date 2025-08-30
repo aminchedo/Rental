@@ -239,7 +239,7 @@ class Database {
     const sql = `
       SELECT 
         strftime('%Y-%m', createdAt) as month,
-        SUM(CAST(monthlyRent as INTEGER)) as income,
+        SUM(CAST(rentAmount as INTEGER)) as income,
         COUNT(*) as contracts
       FROM contracts 
       WHERE status IN ('active', 'signed')
