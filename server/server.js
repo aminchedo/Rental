@@ -5,6 +5,7 @@ const cors = require('cors');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const database = require('./database');
+const { sendContractSignedEmail } = require('./emailService');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -200,6 +201,117 @@ app.get('/api/contracts/:contractNumber', (req, res) => {
     }
     
     res.json(contract);
+  });
+});
+
+// Sign contract endpoint
+app.post('/api/contracts/:contractNumber/sign', async (req, res) => {
+  const { contractNumber } = req.params;
+  const { signature } = req.body;
+
+  try {
+    // Get the contract first
+    database.getContractByNumber(contractNumber, async (err, contract) => {
+      if (err) {
+        console.error('Error fetching contract:', err);
+        return res.status(500).json({ error: 'Failed to fetch contract' });
+      }
+
+      if (!contract) {
+        return res.status(404).json({ error: 'Contract not found' });
+      }
+
+      // Update contract with signature and signed status
+      const updates = {
+        status: 'signed',
+        signature: signature,
+        signedAt: new Date().toISOString()
+      };
+
+      database.updateContract(contractNumber, updates, async (updateErr) => {
+        if (updateErr) {
+          console.error('Error updating contract:', updateErr);
+          return res.status(500).json({ error: 'Failed to sign contract' });
+        }
+
+        // Send email notification to landlord
+        try {
+          const emailResult = await sendContractSignedEmail(
+            contract.landlordEmail,
+            contract.landlordName,
+            contract.tenantName,
+            contractNumber
+          );
+
+          if (emailResult.success) {
+            console.log('Contract signed and email sent successfully');
+          } else {
+            console.error('Contract signed but email failed:', emailResult.error);
+          }
+        } catch (emailError) {
+          console.error('Email sending error:', emailError);
+          // Continue with success response even if email fails
+        }
+
+        res.json({ success: true, message: 'Contract signed successfully' });
+      });
+    });
+  } catch (error) {
+    console.error('Contract signing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Lookup tenant by National ID
+app.get('/api/tenant/lookup/:nationalId', (req, res) => {
+  const { nationalId } = req.params;
+
+  // Validate National ID format (10 digits)
+  if (!/^\d{10}$/.test(nationalId)) {
+    return res.status(400).json({ error: 'Invalid National ID format' });
+  }
+
+  database.getTenantByNationalId(nationalId, (err, tenant) => {
+    if (err) {
+      console.error('Error looking up tenant:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (!tenant) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+
+    res.json({
+      tenantName: tenant.tenantName,
+      tenantEmail: tenant.tenantEmail,
+      tenantPhone: tenant.tenantPhone
+    });
+  });
+});
+
+// Lookup landlord by National ID
+app.get('/api/landlord/lookup/:nationalId', (req, res) => {
+  const { nationalId } = req.params;
+
+  // Validate National ID format (10 digits)
+  if (!/^\d{10}$/.test(nationalId)) {
+    return res.status(400).json({ error: 'Invalid National ID format' });
+  }
+
+  database.getLandlordByNationalId(nationalId, (err, landlord) => {
+    if (err) {
+      console.error('Error looking up landlord:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (!landlord) {
+      return res.status(404).json({ error: 'Landlord not found' });
+    }
+
+    res.json({
+      landlordName: landlord.landlordName,
+      landlordEmail: landlord.landlordEmail
+    });
   });
 });
 

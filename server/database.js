@@ -41,8 +41,10 @@ class Database {
         tenantName TEXT NOT NULL,
         tenantEmail TEXT NOT NULL,
         tenantPhone TEXT,
+        tenantNationalId TEXT,
         landlordName TEXT NOT NULL,
         landlordEmail TEXT NOT NULL,
+        landlordNationalId TEXT,
         propertyAddress TEXT NOT NULL,
         propertyType TEXT,
         rentAmount TEXT NOT NULL,
@@ -74,6 +76,7 @@ class Database {
         console.error('Error creating contracts table:', err.message);
       } else {
         console.log('Contracts table ready.');
+        this.addMissingColumns();
         this.migrateExistingData();
       }
     });
@@ -111,6 +114,22 @@ class Database {
           );
         });
       }
+    });
+  }
+
+  addMissingColumns() {
+    // Add new columns if they don't exist (for existing databases)
+    const alterQueries = [
+      'ALTER TABLE contracts ADD COLUMN tenantNationalId TEXT',
+      'ALTER TABLE contracts ADD COLUMN landlordNationalId TEXT'
+    ];
+
+    alterQueries.forEach(query => {
+      this.db.run(query, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+          console.error('Error adding column:', err.message);
+        }
+      });
     });
   }
 
@@ -153,23 +172,23 @@ class Database {
 
   addContract(contractData, callback) {
     const {
-      id, contractNumber, accessCode, tenantName, tenantEmail, tenantPhone,
-      landlordName, landlordEmail, propertyAddress, propertyType, rentAmount,
+      id, contractNumber, accessCode, tenantName, tenantEmail, tenantPhone, tenantNationalId,
+      landlordName, landlordEmail, landlordNationalId, propertyAddress, propertyType, rentAmount,
       startDate, endDate, deposit, status, signature, nationalId, createdBy
     } = contractData;
 
     const sql = `
       INSERT OR REPLACE INTO contracts (
-        id, contractNumber, accessCode, tenantName, tenantEmail, tenantPhone,
-        landlordName, landlordEmail, propertyAddress, propertyType, rentAmount,
+        id, contractNumber, accessCode, tenantName, tenantEmail, tenantPhone, tenantNationalId,
+        landlordName, landlordEmail, landlordNationalId, propertyAddress, propertyType, rentAmount,
         startDate, endDate, deposit, status, signature, nationalId, createdBy,
         lastModified
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `;
 
     this.db.run(sql, [
-      id || contractNumber, contractNumber, accessCode, tenantName, tenantEmail, tenantPhone,
-      landlordName, landlordEmail, propertyAddress, propertyType, rentAmount,
+      id || contractNumber, contractNumber, accessCode, tenantName, tenantEmail, tenantPhone, tenantNationalId,
+      landlordName, landlordEmail, landlordNationalId, propertyAddress, propertyType, rentAmount,
       startDate, endDate, deposit, status || 'draft', signature, nationalId, createdBy || 'landlord'
     ], callback);
   }
@@ -190,6 +209,29 @@ class Database {
   // User operations
   getUserByUsername(username, callback) {
     this.db.get('SELECT * FROM users WHERE username = ?', [username], callback);
+  }
+
+  // Lookup operations for autofill
+  getTenantByNationalId(nationalId, callback) {
+    // Get the most recent contract for this tenant's national ID
+    this.db.get(`
+      SELECT tenantName, tenantEmail, tenantPhone 
+      FROM contracts 
+      WHERE tenantNationalId = ? 
+      ORDER BY createdAt DESC 
+      LIMIT 1
+    `, [nationalId], callback);
+  }
+
+  getLandlordByNationalId(nationalId, callback) {
+    // Get the most recent contract for this landlord's national ID
+    this.db.get(`
+      SELECT DISTINCT landlordName, landlordEmail 
+      FROM contracts 
+      WHERE landlordNationalId = ? 
+      ORDER BY createdAt DESC 
+      LIMIT 1
+    `, [nationalId], callback);
   }
 
   close() {

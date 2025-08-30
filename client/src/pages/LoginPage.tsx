@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Home, Key, Lock, UserCheck, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useContracts } from '../context/ContractContext';
 
@@ -22,7 +23,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
       await fetchContracts();
       addNotification('مدیر سیستم با موفقیت وارد شد', 'success');
     } else {
-      alert('نام کاربری یا رمز عبور مدیر اشتباه است');
+      toast.error('نام کاربری یا رمز عبور مدیر اشتباه است');
     }
   };
 
@@ -36,7 +37,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
       
       if (contract) {
         if (contract.status === 'signed') {
-          alert('این قرارداد قبلاً امضا شده و دیگر قابل دسترسی نیست');
+          toast.error('این قرارداد قبلاً امضا شده و دیگر قابل دسترسی نیست');
           return;
         }
         
@@ -51,11 +52,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification })
         onTenantLogin(contract);
         addNotification(`مستأجر ${contract.tenantName} وارد شد`, 'success');
       } else {
-        alert('شماره قرارداد یا کد دسترسی اشتباه است یا قرارداد منقضی شده');
+        toast.error('شماره قرارداد یا کد دسترسی اشتباه است یا قرارداد منقضی شده');
       }
     } catch (error) {
       console.error('Error during tenant login:', error);
-      alert('خطا در ورود به سیستم');
+      toast.error('خطا در ورود به سیستم');
     } finally {
       setIsLoading(false);
     }
