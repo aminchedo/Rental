@@ -35,6 +35,7 @@ const ProfessionalRentalSystem = () => {
   // NEW STATE for National ID
   const [nationalIdImage, setNationalIdImage] = useState<any>(null);
   const [nationalIdPreview, setNationalIdPreview] = useState<any>(null);
+  const [uploadProgress, setUploadProgress] = useState({ signature: false, nationalId: false });
 
   const adminUser = { username: 'admin', password: 'admin', role: 'landlord', name: 'مدیر سیستم' };
 
@@ -162,6 +163,7 @@ const ProfessionalRentalSystem = () => {
     setSignaturePreview(null);
     setNationalIdImage(null);
     setNationalIdPreview(null);
+    setUploadProgress({ signature: false, nationalId: false });
     setSelectedContract(null);
   };
 
@@ -176,12 +178,36 @@ const ProfessionalRentalSystem = () => {
   const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      if (file.size > 10 * 1024 * 1024) { alert('حجم فایل باید کمتر از 10 مگابایت باشد'); return; }
-      setSignatureImage(file);
-      const reader = new FileReader();
-      reader.onload = (ev) => setSignaturePreview(ev.target?.result);
-      reader.readAsDataURL(file);
-      addNotification('امضای شما با موفقیت آپلود شد', 'success');
+      if (file.size > 10 * 1024 * 1024) { 
+        alert('حجم فایل باید کمتر از 10 مگابایت باشد'); 
+        return; 
+      }
+      
+      // Validate image quality for signature
+      setUploadProgress(prev => ({ ...prev, signature: true }));
+      const img = new Image();
+      img.onload = () => {
+        if (img.width < 150 || img.height < 50) {
+          alert('کیفیت تصویر امضا باید حداقل 150x50 پیکسل باشد');
+          setUploadProgress(prev => ({ ...prev, signature: false }));
+          return;
+        }
+        
+        setSignatureImage(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setSignaturePreview(ev.target?.result);
+          setUploadProgress(prev => ({ ...prev, signature: false }));
+        };
+        reader.readAsDataURL(file);
+        addNotification('امضای شما با موفقیت آپلود شد', 'success');
+      };
+      
+      img.onerror = () => {
+        alert('فایل تصویری معتبر نیست');
+      };
+      
+      img.src = URL.createObjectURL(file);
     } else {
       alert('لطفاً یک فایل تصویری معتبر انتخاب کنید');
     }
@@ -191,12 +217,37 @@ const ProfessionalRentalSystem = () => {
   const handleNationalIdUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      if (file.size > 10 * 1024 * 1024) { alert('حجم فایل باید کمتر از 10 مگابایت باشد'); return; }
-      setNationalIdImage(file);
-      const reader = new FileReader();
-      reader.onload = (ev) => setNationalIdPreview(ev.target?.result);
-      reader.readAsDataURL(file);
-      addNotification('تصویر کارت ملی با موفقیت آپلود شد', 'success');
+      if (file.size > 10 * 1024 * 1024) { 
+        alert('حجم فایل باید کمتر از 10 مگابایت باشد'); 
+        return; 
+      }
+      
+      // Validate image dimensions and quality
+      setUploadProgress(prev => ({ ...prev, nationalId: true }));
+      const img = new Image();
+      img.onload = () => {
+        if (img.width < 200 || img.height < 200) {
+          alert('کیفیت تصویر باید حداقل 200x200 پیکسل باشد');
+          setUploadProgress(prev => ({ ...prev, nationalId: false }));
+          return;
+        }
+        
+        setNationalIdImage(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setNationalIdPreview(ev.target?.result);
+          setUploadProgress(prev => ({ ...prev, nationalId: false }));
+        };
+        reader.readAsDataURL(file);
+        addNotification('تصویر کارت ملی با موفقیت آپلود شد', 'success');
+      };
+      
+      img.onerror = () => {
+        alert('فایل تصویری معتبر نیست');
+        setUploadProgress(prev => ({ ...prev, nationalId: false }));
+      };
+      
+      img.src = URL.createObjectURL(file);
     } else {
       alert('لطفاً یک فایل تصویری معتبر انتخاب کنید');
     }
@@ -403,6 +454,18 @@ const ProfessionalRentalSystem = () => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     addNotification('کپی شد', 'success');
+  };
+
+  const removeSignature = () => {
+    setSignatureImage(null);
+    setSignaturePreview(null);
+    addNotification('امضا حذف شد', 'info');
+  };
+
+  const removeNationalId = () => {
+    setNationalIdImage(null);
+    setNationalIdPreview(null);
+    addNotification('تصویر کارت ملی حذف شد', 'info');
   };
 
   if (!isAuthenticated) {
@@ -1006,11 +1069,22 @@ const ProfessionalRentalSystem = () => {
                 <div>
                   <h4 className="font-semibold text-gray-700 mb-2">۱. آپلود امضا (اجباری)</h4>
                   <label className="block cursor-pointer">
-                    <div className={`flex items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl transition-all duration-300 ${signaturePreview ? 'border-green-400 bg-green-50' : 'border-gray-400 hover:border-blue-400'}`}>
-                      {signaturePreview ? (
+                    <div className={`flex items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl transition-all duration-300 ${signaturePreview ? 'border-green-400 bg-green-50' : uploadProgress.signature ? 'border-blue-400 bg-blue-50' : 'border-gray-400 hover:border-blue-400'}`}>
+                      {uploadProgress.signature ? (
+                        <div className="text-center p-4">
+                          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <p className="text-blue-600 font-semibold text-sm">در حال پردازش...</p>
+                        </div>
+                      ) : signaturePreview ? (
                         <div className="text-center p-4">
                           <img src={signaturePreview} alt="پیش‌نمایش امضا" className="max-h-24 mx-auto mb-2"/>
-                          <p className="text-green-600 font-semibold text-sm">امضا آپلود شد</p>
+                          <p className="text-green-600 font-semibold text-sm mb-2">امضا آپلود شد</p>
+                          <button
+                            onClick={(e) => { e.preventDefault(); removeSignature(); }}
+                            className="text-red-500 hover:text-red-700 text-xs underline"
+                          >
+                            حذف امضا
+                          </button>
                         </div>
                       ) : (
                         <div className="text-center p-4">
@@ -1026,11 +1100,22 @@ const ProfessionalRentalSystem = () => {
                 <div>
                   <h4 className="font-semibold text-gray-700 mb-2">۲. آپلود کارت ملی (اختیاری)</h4>
                   <label className="block cursor-pointer">
-                    <div className={`flex items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl transition-all duration-300 ${nationalIdPreview ? 'border-green-400 bg-green-50' : 'border-gray-400 hover:border-blue-400'}`}>
-                      {nationalIdPreview ? (
+                    <div className={`flex items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl transition-all duration-300 ${nationalIdPreview ? 'border-green-400 bg-green-50' : uploadProgress.nationalId ? 'border-blue-400 bg-blue-50' : 'border-gray-400 hover:border-blue-400'}`}>
+                      {uploadProgress.nationalId ? (
+                        <div className="text-center p-4">
+                          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <p className="text-blue-600 font-semibold text-sm">در حال پردازش...</p>
+                        </div>
+                      ) : nationalIdPreview ? (
                         <div className="text-center p-4">
                           <img src={nationalIdPreview} alt="پیش‌نمایش کارت ملی" className="max-h-24 mx-auto mb-2"/>
-                          <p className="text-green-600 font-semibold text-sm">کارت ملی آپلود شد</p>
+                          <p className="text-green-600 font-semibold text-sm mb-2">کارت ملی آپلود شد</p>
+                          <button
+                            onClick={(e) => { e.preventDefault(); removeNationalId(); }}
+                            className="text-red-500 hover:text-red-700 text-xs underline"
+                          >
+                            حذف کارت ملی
+                          </button>
                         </div>
                       ) : (
                         <div className="text-center p-4">
