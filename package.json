@@ -14,9 +14,18 @@
     "lint": "cd client && npm run lint && cd ../backend && npm run lint"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^24.7.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
-  "keywords": ["llm", "monitoring", "persian", "react", "typescript"],
+  "keywords": [
+    "llm",
+    "monitoring",
+    "persian",
+    "react",
+    "typescript"
+  ],
   "author": "",
   "license": "MIT"
 }
