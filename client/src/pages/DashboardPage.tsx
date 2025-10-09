@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, CheckCircle, Archive, Star, RefreshCw, Search, 
   Folder, Copy, Eye, Download, Send, Trash2, TrendingUp, DollarSign
@@ -11,12 +12,13 @@ import ExpenseChart from '../components/ExpenseChart';
 import { SkeletonChart } from '../components/SkeletonLoader';
 // import { useLoading } from '../hooks/useLoading';
 import { api, endpoints } from '../config/api';
+import toast from 'react-hot-toast';
 
 interface DashboardPageProps {
-  onEditContract: (contract: any) => void;
-  onGeneratePDF: (contract: any) => void;
-  onResendAccessCode: (contract: any) => void;
-  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  onEditContract?: (contract: any) => void;
+  onGeneratePDF?: (contract: any) => void;
+  onResendAccessCode?: (contract: any) => void;
+  addNotification?: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -24,7 +26,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   onGeneratePDF,
   onResendAccessCode,
   addNotification
-}) => {
+} = {}) => {
+  const navigate = useNavigate();
   const { 
     contracts, 
     filteredContracts,
@@ -62,7 +65,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         setExpensesSummary([]);
       } catch (error) {
         console.error('Error fetching chart data:', error);
-        addNotification('خطا در بارگذاری نمودارها', 'error');
+        if (addNotification) {
+          addNotification('خطا در بارگذاری نمودارها', 'error');
+        } else {
+          toast.error('خطا در بارگذاری نمودارها');
+        }
       } finally {
         setChartsLoading(false);
       }
@@ -73,16 +80,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    addNotification('کپی شد', 'success');
+    if (addNotification) {
+      addNotification('کپی شد', 'success');
+    } else {
+      toast.success('کپی شد');
+    }
   };
 
   const handleDeleteContract = async (contractNumber: string) => {
     if (confirm('آیا مطمئن هستید که می‌خواهید این قرارداد را حذف کنید؟')) {
       try {
         await deleteContract(contractNumber);
-        addNotification(`قرارداد ${contractNumber} حذف شد`, 'warning');
+        if (addNotification) {
+          addNotification(`قرارداد ${contractNumber} حذف شد`, 'warning');
+        } else {
+          toast.success(`قرارداد ${contractNumber} حذف شد`);
+        }
       } catch (error) {
-        addNotification('خطا در حذف قرارداد', 'error');
+        if (addNotification) {
+          addNotification('خطا در حذف قرارداد', 'error');
+        } else {
+          toast.error('خطا در حذف قرارداد');
+        }
       }
     }
   };
@@ -91,10 +110,51 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     if (confirm('آیا مطمئن هستید که می‌خواهید این قرارداد را فسخ کنید؟')) {
       try {
         await terminateContract(contractNumber);
-        addNotification(`قرارداد ${contractNumber} فسخ شد`, 'warning');
+        if (addNotification) {
+          addNotification(`قرارداد ${contractNumber} فسخ شد`, 'warning');
+        } else {
+          toast.success(`قرارداد ${contractNumber} فسخ شد`);
+        }
       } catch (error) {
-        addNotification('خطا در فسخ قرارداد', 'error');
+        if (addNotification) {
+          addNotification('خطا در فسخ قرارداد', 'error');
+        } else {
+          toast.error('خطا در فسخ قرارداد');
+        }
       }
+    }
+  };
+
+  const handleEditContract = (contract: any) => {
+    if (onEditContract) {
+      onEditContract(contract);
+    } else {
+      // Store contract in sessionStorage for the form page
+      sessionStorage.setItem('editContract', JSON.stringify(contract));
+      navigate('/contract/new');
+    }
+  };
+
+  const handleGeneratePDF = (contract: any) => {
+    if (onGeneratePDF) {
+      onGeneratePDF(contract);
+    } else {
+      // Default PDF generation logic
+      const printWindow = window.open('', '_blank');
+      const pdfContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>قرارداد ${contract.contractNumber}</title></head><body><h1>قرارداد اجاره</h1><p>شماره: ${contract.contractNumber}</p></body></html>`;
+      if (printWindow) {
+        printWindow.document.write(pdfContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  };
+
+  const handleResendAccessCode = (contract: any) => {
+    if (onResendAccessCode) {
+      onResendAccessCode(contract);
+    } else {
+      toast.success(`کد دسترسی به ${contract.tenantName} ارسال شد`);
     }
   };
 
@@ -343,14 +403,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => onEditContract(contract)}
+                          onClick={() => handleEditContract(contract)}
                           className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                           title="مشاهده جزئیات"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => onGeneratePDF(contract)}
+                          onClick={() => handleGeneratePDF(contract)}
                           className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                           title="دانلود PDF"
                         >
@@ -358,7 +418,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                         </button>
                         {contract.status === 'active' && (
                           <button
-                            onClick={() => onResendAccessCode(contract)}
+                            onClick={() => handleResendAccessCode(contract)}
                             className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
                             title="ارسال مجدد کد"
                           >

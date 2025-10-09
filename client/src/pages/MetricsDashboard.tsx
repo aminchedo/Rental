@@ -319,3 +319,5 @@ export const MetricsDashboard: React.FC = () => {
     </div>
   );
 };
+
+export default MetricsDashboard;
