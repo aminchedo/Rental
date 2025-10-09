@@ -15,6 +15,49 @@ echo ""
 FAILED=0
 
 # ============================================================================
+# Phase P: TypeScript-Only Enforcement
+# ============================================================================
+echo "🔒 PHASE P: TypeScript-Only Enforcement"
+echo "======================================================================"
+
+echo "🔍 Checking for Python files outside archive..."
+if find . -type f -name "*.py" \
+   -not -path "./archive/python/*" \
+   -not -path "./node_modules/*" \
+   -not -path "./.venv/*" \
+   -not -path "./venv/*" | grep -q .; then
+    red "❌ CRITICAL: Found .py files outside archive/python/"
+    red "   Backend MUST be TypeScript-only per Phase P specification"
+    find . -type f -name "*.py" \
+      -not -path "./archive/python/*" \
+      -not -path "./node_modules/*" \
+      -not -path "./.venv/*" \
+      -not -path "./venv/*"
+    FAILED=$((FAILED + 1))
+else
+    grn "✅ No Python files outside archive - TypeScript-only enforcement passed"
+fi
+
+echo ""
+echo "🔍 Checking for JavaScript files in backend/src..."
+if [ -d "backend/src" ]; then
+    if find backend/src -type f -name "*.js" | grep -q .; then
+        red "❌ CRITICAL: Found .js files in backend/src"
+        red "   Backend MUST be TypeScript-only"
+        find backend/src -type f -name "*.js"
+        FAILED=$((FAILED + 1))
+    else
+        grn "✅ backend/src is TypeScript-only (no .js files)"
+    fi
+fi
+
+echo ""
+chk archive/python/README.md
+chk docs/python_inventory.md
+
+echo ""
+
+# ============================================================================
 # Step 1: Dataset Preparation
 # ============================================================================
 echo "🗂️  STEP 1: Dataset Preparation"
@@ -22,8 +65,8 @@ echo "======================================================================"
 
 # Create datasets if they don't exist
 if [ ! -f "datasets/train.jsonl" ]; then
-    echo "Creating datasets..."
-    python3 scripts/download_datasets.py
+    echo "Creating datasets (TypeScript)..."
+    npx ts-node scripts/download_datasets.ts
 fi
 
 chk datasets/train.jsonl
@@ -31,8 +74,8 @@ chk datasets/test.jsonl
 chk datasets/checksums.txt
 
 echo ""
-echo "Running dataset validation..."
-if python3 scripts/check_dataset.py; then
+echo "Running dataset validation (TypeScript)..."
+if npx ts-node scripts/check_dataset.ts; then
     grn "✅ Dataset validation passed"
 else
     red "❌ Dataset validation failed"
@@ -73,8 +116,8 @@ if [ -d "models/persian-chat" ]; then
     ylw "Model directory already exists, skipping training..."
     ylw "To retrain, remove models/persian-chat and run again"
 else
-    echo "Running training (this may take a while on CPU)..."
-    if python3 scripts/train_cpu.py --epochs 1 --batch_size 2 --lr 5e-5 --max_length 512 --seed 42; then
+    echo "Running training (TypeScript wrapper → Python)..."
+    if npx ts-node scripts/train_cpu.ts --epochs 1 --batch_size 2 --lr 5e-5 --max_length 512 --seed 42; then
         grn "✅ Training completed"
     else
         red "❌ Training failed"
@@ -109,12 +152,7 @@ if command -v npx &> /dev/null; then
         FAILED=$((FAILED + 1))
     fi
 else
-    ylw "⚠️  npx not found, trying Python evaluation..."
-    if python3 scripts/eval_cpu.py --data datasets/test.jsonl --model models/persian-chat 2>/dev/null; then
-        grn "✅ Python evaluation completed"
-    else
-        ylw "⚠️  Evaluation skipped (no evaluator available)"
-    fi
+    ylw "⚠️  npx not found, evaluation skipped"
 fi
 
 chk logs/eval.json
