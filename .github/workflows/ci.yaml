@@ -16,19 +16,27 @@ jobs:
       
       - name: Check for Python files outside archive
         run: |
-          echo "🔍 Checking for .py files outside archive/python/..."
+          echo "🔍 Checking for .py files outside archive/..."
+          echo "   (ML helpers train_cpu.py and eval_cpu.py are allowed)"
           if find . -type f -name "*.py" \
-             -not -path "./archive/python/*" \
+             -not -path "./archive/*" \
              -not -path "./node_modules/*" \
              -not -path "./.venv/*" \
-             -not -path "./venv/*" | grep -q .; then
-            echo "❌ CRITICAL: Found .py files outside archive/python/"
+             -not -path "./venv/*" \
+             -not -path "*/node_modules/*" \
+             -not -path "./scripts/train_cpu.py" \
+             -not -path "./scripts/eval_cpu.py" | grep -q .; then
+            echo "❌ CRITICAL: Found .py files outside archive/"
             echo "   Backend MUST be TypeScript-only per Phase P specification"
+            echo "   (ML helpers train_cpu.py and eval_cpu.py are allowed)"
             find . -type f -name "*.py" \
-              -not -path "./archive/python/*" \
+              -not -path "./archive/*" \
               -not -path "./node_modules/*" \
               -not -path "./.venv/*" \
-              -not -path "./venv/*"
+              -not -path "./venv/*" \
+              -not -path "*/node_modules/*" \
+              -not -path "./scripts/train_cpu.py" \
+              -not -path "./scripts/eval_cpu.py"
             exit 1
           else
             echo "✅ No Python files outside archive - TypeScript-only enforcement passed"

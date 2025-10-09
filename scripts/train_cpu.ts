@@ -11,6 +11,7 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
 interface TrainingArgs {
   epochs?: number;
@@ -29,6 +30,8 @@ interface TrainingArgs {
  * Execute Python training script with TypeScript argument handling
  */
 async function trainModel(args: TrainingArgs): Promise<void> {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
   const pythonScript = path.join(__dirname, 'train_cpu.py');
   
   // Verify Python script exists
@@ -169,12 +172,14 @@ async function main(): Promise<void> {
   }
 }
 
+export { trainModel };
+export type { TrainingArgs };
+
 // Execute if run directly
-if (require.main === module) {
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
   main().catch((error) => {
     console.error('Fatal error:', error);
     process.exit(1);
   });
 }
-
-export { trainModel, TrainingArgs };
