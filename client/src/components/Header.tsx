@@ -56,6 +56,8 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => handleNavigate('dashboard')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${currentView === 'dashboard' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                aria-label="داشبورد"
+                aria-current={currentView === 'dashboard' ? 'page' : undefined}
               >
                 <Home className="w-4 h-4 inline ml-2" />
                 داشبورد
@@ -63,6 +65,7 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => handleNavigate('form')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${currentView === 'form' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                aria-label="ایجاد قرارداد جدید"
               >
                 <Plus className="w-4 h-4 inline ml-2" />
                 قرارداد جدید
@@ -70,11 +73,12 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => handleNavigate('notifications')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all relative ${currentView === 'notifications' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                aria-label={`اعلان‌ها ${notifications.length > 0 ? `(${notifications.length} اعلان جدید)` : ''}`}
               >
                 <Bell className="w-4 h-4 inline ml-2" />
                 اعلان‌ها
                 {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse" aria-hidden="true">
                     {notifications.length}
                   </span>
                 )}
