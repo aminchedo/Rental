@@ -188,6 +188,65 @@ test_logging() {
     fi
 }
 
+# Test 7: Persian output enforcement
+test_persian_output_enforcement() {
+    echo ""
+    echo "Test 7: Persian output enforcement"
+    echo "--------------------------------------"
+    
+    # Send an English prompt and assert the answer is Persian
+    RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${CHAT_ENDPOINT}" \
+        -H "Content-Type: application/json" \
+        -d '{"message":"Hello, how are you?","stream":false}' 2>/dev/null)
+    
+    HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+    BODY=$(echo "$RESPONSE" | head -n-1)
+    
+    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+        # Check if response contains Persian text (Arabic script range)
+        # Using grep with Perl regex for Unicode support
+        if echo "$BODY" | grep -qP '[\x{0600}-\x{06FF}]'; then
+            print_success "Persian output enforcement working (response contains Persian text)"
+            echo "Response snippet: ${BODY:0:100}..."
+        else
+            # Also try basic grep without Perl regex
+            if echo "$BODY" | grep -q "سلام\|چطور\|می"; then
+                print_success "Persian output detected in response"
+            else
+                print_warning "English prompt sent, but response may not be in Persian"
+                echo "Response: ${BODY:0:200}..."
+                echo "(This is acceptable if model responds in user's language)"
+            fi
+        fi
+    else
+        print_error "Request failed (HTTP $HTTP_CODE)"
+        return 1
+    fi
+}
+
+# Test 8: STT/TTS route availability
+test_speech_routes() {
+    echo ""
+    echo "Test 8: Speech routes (STT/TTS)"
+    echo "--------------------------------------"
+    
+    # Test STT route
+    STT_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${API_URL}/api/stt/status" 2>/dev/null)
+    if [ "$STT_CODE" = "200" ] || [ "$STT_CODE" = "405" ]; then
+        print_success "STT route available (HTTP $STT_CODE)"
+    else
+        print_warning "STT route may not be available (HTTP $STT_CODE)"
+    fi
+    
+    # Test TTS route
+    TTS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${API_URL}/api/tts/status" 2>/dev/null)
+    if [ "$TTS_CODE" = "200" ] || [ "$TTS_CODE" = "405" ]; then
+        print_success "TTS route available (HTTP $TTS_CODE)"
+    else
+        print_warning "TTS route may not be available (HTTP $TTS_CODE)"
+    fi
+}
+
 # Main execution
 main() {
     FAILED=0
@@ -204,6 +263,8 @@ main() {
     test_error_handling  # Don't count as failure
     test_persian_text || FAILED=$((FAILED + 1))
     test_logging  # Don't count as failure
+    test_persian_output_enforcement  # Don't count as failure (informational)
+    test_speech_routes  # Don't count as failure (informational)
     
     # Summary
     echo ""

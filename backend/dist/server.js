@@ -48,6 +48,8 @@ const cors_1 = __importDefault(require("cors"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const chat_1 = __importDefault(require("./routes/chat"));
+const stt_1 = __importDefault(require("./routes/stt"));
+const tts_1 = __importDefault(require("./routes/tts"));
 const app = (0, express_1.default)();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 // Middleware
@@ -68,6 +70,8 @@ app.use((req, _res, next) => {
 });
 // Routes
 app.use('/api/chat', chat_1.default);
+app.use('/api/stt', stt_1.default);
+app.use('/api/tts', tts_1.default);
 // Health check endpoint
 app.get('/health', (_req, res) => {
     res.json({
@@ -83,6 +87,8 @@ app.get('/', (_req, res) => {
         message: 'Persian Chat API - TypeScript Backend',
         endpoints: {
             chat: '/api/chat',
+            stt: '/api/stt',
+            tts: '/api/tts',
             health: '/health'
         }
     });

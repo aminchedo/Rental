@@ -13,6 +13,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
+import { handleSearchRequest, buildContextWindow } from '../services/search';
 
 const router = Router();
 
@@ -25,19 +26,24 @@ const ChatRequestSchema = z.object({
   })).optional(),
   temperature: z.number().min(0.1).max(1.0).optional().default(0.3),
   stream: z.boolean().optional().default(true),
-  max_tokens: z.number().optional().default(512)
+  max_tokens: z.number().optional().default(512),
+  use_retrieval: z.boolean().optional().default(false)
 });
 
 // Type for validated chat request
 // type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 /**
- * System prompt - strict and focused for accuracy
+ * System prompt - Persian-only enforcement
  * (Used in production model inference)
  */
-const SYSTEM_PROMPT = `شما یک دستیار هوشمند فارسی‌زبان هستید که به کاربران کمک می‌کنید.
-پاسخ‌های خود را دقیق، مفید و مختصر ارائه دهید.
-همیشه به زبان فارسی پاسخ دهید.`;
+const SYSTEM_PROMPT = `شما یک دستیار هوشمند فارسی‌زبان هستید.
+
+قوانین مهم:
+- به طور پیش‌فرض به زبان فارسی (fa-IR) پاسخ دهید.
+- از اصطلاحات فنی دقیق فارسی استفاده کنید.
+- اگر کاربر به زبان دیگری صحبت کرد، از همان زبان استفاده کنید.
+- پاسخ‌های خود را دقیق، مفید و مختصر ارائه دهید.`;
 
 // Prevent unused variable error in simulation mode
 console.log('System prompt loaded:', SYSTEM_PROMPT.substring(0, 50) + '...');
@@ -93,13 +99,28 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     // Validate request body with Zod
     const validatedData = ChatRequestSchema.parse(req.body);
-    const { message, temperature, stream } = validatedData;
+    const { message, temperature, stream, use_retrieval } = validatedData;
     
     // Build conversation context (for production model)
     // const conversationMessages = messages || [
     //   { role: 'system' as const, content: SYSTEM_PROMPT },
     //   { role: 'user' as const, content: message }
     // ];
+    
+    // Perform search/retrieval if enabled
+    let retrievalSources: Array<{ title: string; url?: string }> = [];
+    
+    if (use_retrieval) {
+      const searchResult = await handleSearchRequest(message, 3, 'fa');
+      if (searchResult.results.length > 0) {
+        // Build context for future model integration
+        buildContextWindow(searchResult.results, 500);
+        retrievalSources = searchResult.results.map(r => ({
+          title: r.title,
+          url: r.url,
+        }));
+      }
+    }
     
     // Log request
     const logsDir = path.join(process.cwd(), '..', 'logs');
@@ -108,6 +129,8 @@ router.post('/', async (req: Request, res: Response) => {
       message: message.substring(0, 100),
       temperature,
       stream,
+      use_retrieval,
+      retrieval_sources: retrievalSources.length,
       ip: req.ip
     };
     
@@ -123,6 +146,16 @@ router.post('/', async (req: Request, res: Response) => {
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('X-Temperature', temperature.toString());
+      res.setHeader('X-Retrieval-Enabled', use_retrieval.toString());
+      res.setHeader('X-Retrieval-Sources', retrievalSources.length.toString());
+      
+      // Send retrieval metadata first
+      if (use_retrieval && retrievalSources.length > 0) {
+        res.write(`data: ${JSON.stringify({ 
+          type: 'retrieval', 
+          sources: retrievalSources 
+        })}\n\n`);
+      }
       
       await generateStreamingResponse(
         message,
@@ -141,6 +174,8 @@ router.post('/', async (req: Request, res: Response) => {
       res.json({
         response,
         temperature,
+        use_retrieval,
+        retrieval_sources: use_retrieval ? retrievalSources : undefined,
         timestamp: new Date().toISOString()
       });
     }
