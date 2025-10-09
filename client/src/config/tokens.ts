@@ -126,6 +126,30 @@ export const typography = {
     '6xl': ['60px', { lineHeight: '1', letterSpacing: '-0.02em' }],
   },
   
+  // Heading Scale (H1-H6)
+  headings: {
+    h1: { fontSize: '48px', lineHeight: '1.1', fontWeight: 700, letterSpacing: '-0.02em' },
+    h2: { fontSize: '36px', lineHeight: '1.2', fontWeight: 700, letterSpacing: '-0.02em' },
+    h3: { fontSize: '30px', lineHeight: '1.3', fontWeight: 600, letterSpacing: '-0.02em' },
+    h4: { fontSize: '24px', lineHeight: '1.4', fontWeight: 600, letterSpacing: '-0.01em' },
+    h5: { fontSize: '20px', lineHeight: '1.5', fontWeight: 600, letterSpacing: '0' },
+    h6: { fontSize: '18px', lineHeight: '1.6', fontWeight: 600, letterSpacing: '0' },
+  },
+  
+  // Body Text Variants
+  body: {
+    large: { fontSize: '18px', lineHeight: '1.6', fontWeight: 400 },
+    base: { fontSize: '16px', lineHeight: '1.6', fontWeight: 400 },
+    small: { fontSize: '14px', lineHeight: '1.5', fontWeight: 400 },
+  },
+  
+  // Meta/Caption Text
+  meta: {
+    large: { fontSize: '14px', lineHeight: '1.5', fontWeight: 400 },
+    base: { fontSize: '12px', lineHeight: '1.5', fontWeight: 400 },
+    small: { fontSize: '11px', lineHeight: '1.4', fontWeight: 400 },
+  },
+  
   // Font weights
   fontWeight: {
     light: 300,

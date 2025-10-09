@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,8 +8,87 @@
   font-family: 'Vazirmatn', 'Tahoma', Arial, sans-serif !important;
 }
 
+html {
+  /* Default RTL for Persian */
+  dir: rtl;
+}
+
+html[dir="ltr"] {
+  direction: ltr;
+}
+
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  /* Base font size ≥16px */
+  font-size: 16px;
+  /* Line height 1.6 for readability */
+  line-height: 1.6;
+  /* Smooth font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* High contrast colors for accessibility (≥4.5:1) */
+:root {
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --border-color: #e2e8f0;
+}
+
+.dark {
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --border-color: #334155;
+}
+
+/* Skeleton loading animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #334155 50%,
+    #1e293b 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Minimum touch target size (44x44px) */
+button,
+a,
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
 }
