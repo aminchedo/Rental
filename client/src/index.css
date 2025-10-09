@@ -8,15 +8,6 @@
   font-family: 'Vazirmatn', 'Tahoma', Arial, sans-serif !important;
 }
 
-html {
-  /* Default RTL for Persian */
-  dir: rtl;
-}
-
-html[dir="ltr"] {
-  direction: ltr;
-}
-
 body {
   margin: 0;
   padding: 0;
