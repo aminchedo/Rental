@@ -1,0 +1,21 @@
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ring: 59 130 246; /* indigo-500 */
+}
+
+* { font-family: 'Vazirmatn','Tahoma',Arial,sans-serif; }
+
+html, body, #root { height: 100%; }
+
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-[rgb(var(--ring))] focus:ring-offset-2 dark:focus:ring-offset-neutral-900;
+}
+
+.card {
+  @apply rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-card;
+}
