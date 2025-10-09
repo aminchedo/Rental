@@ -58,20 +58,55 @@ chk docs/python_inventory.md
 echo ""
 
 # ============================================================================
-# Step 1: Dataset Preparation
+# Step 1: Dataset Preparation (Real HF Datasets)
 # ============================================================================
-echo "🗂️  STEP 1: Dataset Preparation"
+echo "🗂️  STEP 1: Dataset Preparation (Real HuggingFace Datasets)"
 echo "======================================================================"
 
 # Create datasets if they don't exist
 if [ ! -f "datasets/train.jsonl" ]; then
-    echo "Creating datasets (TypeScript)..."
-    npx ts-node scripts/download_datasets.ts
+    echo "Creating datasets from HuggingFace (TypeScript)..."
+    if command -v npx &> /dev/null; then
+        npx ts-node scripts/fetch_hf_datasets.ts
+        npx ts-node scripts/prepare_conversational_merge.ts
+    else
+        echo "⚠️  npx not found, falling back to legacy download"
+        npx ts-node scripts/download_datasets.ts
+    fi
 fi
 
 chk datasets/train.jsonl
 chk datasets/test.jsonl
-chk datasets/checksums.txt
+
+# Check for new-style checksums
+if [ -f "datasets/train.jsonl.sha256" ]; then
+    chk datasets/train.jsonl.sha256
+    chk datasets/test.jsonl.sha256
+    grn "✅ SHA256 checksums found"
+else
+    # Fall back to legacy checksums.txt
+    chk datasets/checksums.txt
+fi
+
+echo ""
+echo "== Real Dataset Integrity =="
+if [ -f "logs/dataset_sources.json" ]; then
+    chk logs/dataset_sources.json
+    
+    # Validate dataset_sources.json structure
+    if command -v node &> /dev/null; then
+        if node -e "const s=require('./logs/dataset_sources.json'); if(!Array.isArray(s)||!s.length||s.some(x=>!x.source||!x.rows||x.rows<=0)) { console.error('Invalid dataset_sources.json'); process.exit(1) }"; then
+            grn "✅ Dataset sources validated (contains real data)"
+        else
+            red "❌ Dataset sources invalid or contains zero rows"
+            FAILED=$((FAILED + 1))
+        fi
+    else
+        ylw "⚠️  Node not available, skipping dataset_sources validation"
+    fi
+else
+    ylw "⚠️  logs/dataset_sources.json not found (may be using legacy datasets)"
+fi
 
 echo ""
 echo "Running dataset validation (TypeScript)..."
@@ -167,6 +202,43 @@ if [ -f "logs/eval.json" ]; then
         FAILED=$((FAILED + 1))
     fi
 fi
+
+echo ""
+echo "== Full Training & Evaluation (Real Data) =="
+
+# Check for full training log
+if [ -f "logs/train_full.log" ]; then
+    chk logs/train_full.log
+    grn "✅ Full training log exists"
+else
+    ylw "⚠️  logs/train_full.log not found (full training may not have run)"
+fi
+
+# Check for full evaluation
+if [ -f "logs/eval_full.json" ]; then
+    chk logs/eval_full.json
+    
+    # Validate full eval metrics
+    if command -v node &> /dev/null; then
+        if node -e "const m=require('./logs/eval_full.json'); if(!m.perplexity || !isFinite(m.perplexity)) { console.error('Invalid perplexity'); process.exit(1) }"; then
+            grn "✅ Full evaluation metrics valid (perplexity is finite)"
+        else
+            red "❌ Invalid metrics in logs/eval_full.json"
+            FAILED=$((FAILED + 1))
+        fi
+    fi
+else
+    ylw "⚠️  logs/eval_full.json not found (full evaluation may not have run)"
+fi
+
+# Check for evaluation samples
+if [ -f "logs/eval_samples.jsonl" ]; then
+    chk logs/eval_samples.jsonl
+    grn "✅ Evaluation samples exist"
+else
+    ylw "⚠️  logs/eval_samples.jsonl not found"
+fi
+
 echo ""
 
 # ============================================================================
