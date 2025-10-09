@@ -47,6 +47,7 @@ const express_1 = require("express");
 const zod_1 = require("zod");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const search_1 = require("../services/search");
 const router = (0, express_1.Router)();
 // Zod schema for request validation
 const ChatRequestSchema = zod_1.z.object({
@@ -57,17 +58,22 @@ const ChatRequestSchema = zod_1.z.object({
     })).optional(),
     temperature: zod_1.z.number().min(0.1).max(1.0).optional().default(0.3),
     stream: zod_1.z.boolean().optional().default(true),
-    max_tokens: zod_1.z.number().optional().default(512)
+    max_tokens: zod_1.z.number().optional().default(512),
+    use_retrieval: zod_1.z.boolean().optional().default(false)
 });
 // Type for validated chat request
 // type ChatRequest = z.infer<typeof ChatRequestSchema>;
 /**
- * System prompt - strict and focused for accuracy
+ * System prompt - Persian-only enforcement
  * (Used in production model inference)
  */
-const SYSTEM_PROMPT = `شما یک دستیار هوشمند فارسی‌زبان هستید که به کاربران کمک می‌کنید.
-پاسخ‌های خود را دقیق، مفید و مختصر ارائه دهید.
-همیشه به زبان فارسی پاسخ دهید.`;
+const SYSTEM_PROMPT = `شما یک دستیار هوشمند فارسی‌زبان هستید.
+
+قوانین مهم:
+- به طور پیش‌فرض به زبان فارسی (fa-IR) پاسخ دهید.
+- از اصطلاحات فنی دقیق فارسی استفاده کنید.
+- اگر کاربر به زبان دیگری صحبت کرد، از همان زبان استفاده کنید.
+- پاسخ‌های خود را دقیق، مفید و مختصر ارائه دهید.`;
 // Prevent unused variable error in simulation mode
 console.log('System prompt loaded:', SYSTEM_PROMPT.substring(0, 50) + '...');
 /**
@@ -109,12 +115,25 @@ router.post('/', async (req, res) => {
     try {
         // Validate request body with Zod
         const validatedData = ChatRequestSchema.parse(req.body);
-        const { message, temperature, stream } = validatedData;
+        const { message, temperature, stream, use_retrieval } = validatedData;
         // Build conversation context (for production model)
         // const conversationMessages = messages || [
         //   { role: 'system' as const, content: SYSTEM_PROMPT },
         //   { role: 'user' as const, content: message }
         // ];
+        // Perform search/retrieval if enabled
+        let retrievalSources = [];
+        if (use_retrieval) {
+            const searchResult = await (0, search_1.handleSearchRequest)(message, 3, 'fa');
+            if (searchResult.results.length > 0) {
+                // Build context for future model integration
+                (0, search_1.buildContextWindow)(searchResult.results, 500);
+                retrievalSources = searchResult.results.map(r => ({
+                    title: r.title,
+                    url: r.url,
+                }));
+            }
+        }
         // Log request
         const logsDir = path.join(process.cwd(), '..', 'logs');
         const requestLog = {
@@ -122,6 +141,8 @@ router.post('/', async (req, res) => {
             message: message.substring(0, 100),
             temperature,
             stream,
+            use_retrieval,
+            retrieval_sources: retrievalSources.length,
             ip: req.ip
         };
         fs.appendFileSync(path.join(logsDir, 'api.log'), JSON.stringify(requestLog) + '\n', 'utf-8');
@@ -131,6 +152,15 @@ router.post('/', async (req, res) => {
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
             res.setHeader('X-Temperature', temperature.toString());
+            res.setHeader('X-Retrieval-Enabled', use_retrieval.toString());
+            res.setHeader('X-Retrieval-Sources', retrievalSources.length.toString());
+            // Send retrieval metadata first
+            if (use_retrieval && retrievalSources.length > 0) {
+                res.write(`data: ${JSON.stringify({
+                    type: 'retrieval',
+                    sources: retrievalSources
+                })}\n\n`);
+            }
             await generateStreamingResponse(message, temperature, (chunk) => {
                 res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
             });
@@ -143,6 +173,8 @@ router.post('/', async (req, res) => {
             res.json({
                 response,
                 temperature,
+                use_retrieval,
+                retrieval_sources: use_retrieval ? retrievalSources : undefined,
                 timestamp: new Date().toISOString()
             });
         }

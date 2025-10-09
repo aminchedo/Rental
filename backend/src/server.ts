@@ -11,6 +11,8 @@ import cors from 'cors';
 import * as fs from 'fs';
 import * as path from 'path';
 import chatRouter from './routes/chat';
+import sttRouter from './routes/stt';
+import ttsRouter from './routes/tts';
 
 const app: Express = express();
 const PORT: number = parseInt(process.env.PORT || '3001', 10);
@@ -42,6 +44,8 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 
 // Routes
 app.use('/api/chat', chatRouter);
+app.use('/api/stt', sttRouter);
+app.use('/api/tts', ttsRouter);
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
@@ -59,6 +63,8 @@ app.get('/', (_req: Request, res: Response) => {
     message: 'Persian Chat API - TypeScript Backend',
     endpoints: {
       chat: '/api/chat',
+      stt: '/api/stt',
+      tts: '/api/tts',
       health: '/health'
     }
   });

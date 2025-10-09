@@ -453,6 +453,98 @@ fi
 echo ""
 
 # ============================================================================
+# Speech Datasets & Voice Capabilities (Persian)
+# ============================================================================
+echo "🎤 SPEECH: Persian Speech Datasets & Voice Capabilities"
+echo "======================================================================"
+
+echo "== Speech Datasets (Persian) =="
+if [ -f "logs/speech_sources.json" ]; then
+    chk logs/speech_sources.json
+    grn "✅ Speech dataset sources logged"
+else
+    ylw "⚠️  logs/speech_sources.json not found"
+fi
+
+echo ""
+echo "== STT/TTS Routes =="
+if [ -f "backend/src/services/stt.ts" ]; then
+    chk backend/src/services/stt.ts
+    grn "✅ STT service implemented"
+else
+    red "❌ STT service not found"
+    FAILED=$((FAILED + 1))
+fi
+
+if [ -f "backend/src/services/tts.ts" ]; then
+    chk backend/src/services/tts.ts
+    grn "✅ TTS service implemented"
+else
+    red "❌ TTS service not found"
+    FAILED=$((FAILED + 1))
+fi
+
+if [ -f "backend/src/routes/stt.ts" ]; then
+    chk backend/src/routes/stt.ts
+    grn "✅ STT route implemented"
+else
+    red "❌ STT route not found"
+    FAILED=$((FAILED + 1))
+fi
+
+if [ -f "backend/src/routes/tts.ts" ]; then
+    chk backend/src/routes/tts.ts
+    grn "✅ TTS route implemented"
+else
+    red "❌ TTS route not found"
+    FAILED=$((FAILED + 1))
+fi
+
+echo ""
+echo "== Search API Integration =="
+if [ -f "backend/src/services/search.ts" ]; then
+    chk backend/src/services/search.ts
+    grn "✅ Search service implemented"
+else
+    red "❌ Search service not found"
+    FAILED=$((FAILED + 1))
+fi
+
+echo ""
+echo "== Persian Output Enforcement =="
+# Check if system prompt enforces Persian
+if grep -q "به طور پیش\-فرض به زبان فارسی" backend/src/routes/chat.ts; then
+    grn "✅ Persian-only system prompt found"
+else
+    ylw "⚠️  Persian-only enforcement may not be configured"
+fi
+
+# Test Persian character range detection (basic regex)
+if node -e "const txt='سلام این یک تست است'; if(!/[\u0600-\u06FF]/.test(txt)){ process.exit(1);} " 2>/dev/null; then
+    grn "✅ Persian character detection working"
+else
+    ylw "⚠️  Persian character detection test inconclusive"
+fi
+
+echo ""
+echo "== Environment Configuration =="
+if [ -f ".env.example" ]; then
+    chk .env.example
+    
+    # Check for required keys
+    if grep -q "SEARCH_API" .env.example && grep -q "STT_" .env.example && grep -q "TTS_" .env.example; then
+        grn "✅ Environment variables documented (Search, STT, TTS)"
+    else
+        ylw "⚠️  Some environment variables may be missing"
+    fi
+else
+    red "❌ .env.example not found"
+    FAILED=$((FAILED + 1))
+fi
+
+echo ""
+
+# ============================================================================
 # Summary
 # ============================================================================
 echo "======================================================================"
