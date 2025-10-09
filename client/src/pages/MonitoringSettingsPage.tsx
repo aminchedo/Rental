@@ -14,6 +14,7 @@ interface AppSettings {
   appearance: {
     theme: 'light' | 'dark' | 'system';
     language: 'fa' | 'en';
+    direction: 'rtl' | 'ltr';
     fontSize: 'sm' | 'base' | 'lg';
     density: 'compact' | 'comfortable' | 'spacious';
   };
@@ -38,6 +39,7 @@ export const MonitoringSettingsPage: React.FC = () => {
     appearance: {
       theme: theme as 'light' | 'dark' | 'system',
       language: locale,
+      direction: locale === 'fa' ? 'rtl' : 'ltr',
       fontSize: 'base',
       density: 'comfortable',
     },
@@ -62,6 +64,9 @@ export const MonitoringSettingsPage: React.FC = () => {
     
     // Apply theme
     setTheme(settings.appearance.theme);
+    
+    // Apply direction immediately
+    document.documentElement.setAttribute('dir', settings.appearance.direction);
     
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
@@ -119,16 +124,38 @@ export const MonitoringSettingsPage: React.FC = () => {
           <Select
             label={t.settings.language}
             value={settings.appearance.language}
-            onChange={(e) => setSettings({
-              ...settings,
-              appearance: { ...settings.appearance, language: e.target.value as any }
-            })}
+            onChange={(e) => {
+              const newLang = e.target.value as 'fa' | 'en';
+              setSettings({
+                ...settings,
+                appearance: { 
+                  ...settings.appearance, 
+                  language: newLang,
+                  direction: newLang === 'fa' ? 'rtl' : 'ltr'
+                }
+              });
+            }}
             options={[
               { value: 'fa', label: 'فارسی (Persian)' },
               { value: 'en', label: 'English' },
             ]}
             fullWidth
             icon={<Globe size={20} />}
+          />
+
+          <Select
+            label="Text Direction"
+            value={settings.appearance.direction}
+            onChange={(e) => setSettings({
+              ...settings,
+              appearance: { ...settings.appearance, direction: e.target.value as any }
+            })}
+            options={[
+              { value: 'rtl', label: 'RTL (Right-to-Left) - Persian/Arabic' },
+              { value: 'ltr', label: 'LTR (Left-to-Right) - English' },
+            ]}
+            fullWidth
+            helperText="Changes apply immediately after save"
           />
 
           <Select

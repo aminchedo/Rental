@@ -531,11 +531,13 @@ bash scripts/validate_api.sh
 
 #### Chat Interface
 - ✅ **Chat Bubbles**: Distinct user vs assistant styling
-- ✅ **RTL Layout**: Full Right-to-Left support for Persian text
+- ✅ **RTL Layout**: Full Right-to-Left support for Persian text (default `dir="rtl"`)
 - ✅ **Auto-scroll**: Automatically scroll to latest message
 - ✅ **Typing Indicator**: Animated spinner during response generation
 - ✅ **Message Animations**: Fade-in animations for new messages
 - ✅ **Mobile-first**: Responsive design for all screen sizes
+- ✅ **Skeleton Loading**: Animated skeleton states for perceived performance
+- ✅ **Focus Visible**: Enhanced keyboard navigation with visible focus indicators
 
 #### UX Enhancements
 - ✅ **Dark/Light Mode**: Toggle with system preference detection
@@ -548,11 +550,16 @@ bash scripts/validate_api.sh
 - ✅ **Toast Notifications**: Error messages and status updates
 - ✅ **Multi-browser**: Chrome, Firefox, Safari, Edge support
 
-#### Settings Panel
-- ✅ **Settings Modal**: Configure API endpoint and keys
+#### Settings Panel (API Override + Local Fallback)
+- ✅ **Settings Modal**: Configure API endpoint and keys (`MonitoringSettingsPage.tsx`)
 - ✅ **Dynamic Application**: Apply settings without reload
 - ✅ **Persistence**: Save settings to localStorage
 - ✅ **Validation**: Real-time input validation
+- ✅ **API Override Logic**: 
+  - If custom endpoint + API key configured → use external API
+  - Otherwise → use local model
+  - All routes logged to `/logs/api.log` with source tracking
+- ✅ **RTL/LTR Toggle**: Switch text direction on-the-fly (Persian RTL default)
 
 ### Directory Structure
 

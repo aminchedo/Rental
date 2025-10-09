@@ -7,6 +7,7 @@
  * - Zod input validation
  * - Structured JSON errors
  * - Request/error logging
+ * - API Override/Fallback (external API or local model)
  */
 
 import { Router, Request, Response } from 'express';
@@ -14,6 +15,7 @@ import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
 import { handleSearchRequest, buildContextWindow } from '../services/search';
+import { getApiConfig } from '../services/apiConfig';
 
 const router = Router();
 
@@ -101,6 +103,9 @@ router.post('/', async (req: Request, res: Response) => {
     const validatedData = ChatRequestSchema.parse(req.body);
     const { message, temperature, stream, use_retrieval } = validatedData;
     
+    // Get API configuration (external or local)
+    const apiConfig = getApiConfig();
+    
     // Build conversation context (for production model)
     // const conversationMessages = messages || [
     //   { role: 'system' as const, content: SYSTEM_PROMPT },
@@ -122,10 +127,13 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
     
-    // Log request
+    // Log request with API route info
     const logsDir = path.join(process.cwd(), '..', 'logs');
     const requestLog = {
       timestamp: new Date().toISOString(),
+      event: 'CHAT_REQUEST',
+      api_source: apiConfig.source,
+      api_endpoint: apiConfig.endpoint,
       message: message.substring(0, 100),
       temperature,
       stream,

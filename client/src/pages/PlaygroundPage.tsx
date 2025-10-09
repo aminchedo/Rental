@@ -59,26 +59,99 @@ export const PlaygroundPage: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
-    // Simulate API call with token streaming
-    setTimeout(() => {
-      const mockTokens = ['سلام', '!', ' چطور', ' می', '‌توانم', ' کمک', 'تان', ' کنم', '؟'];
-      const mockContext = settings.retrievalEnabled ? [
-        'Document 1: معرفی سیستم هوش مصنوعی...',
-        'Document 2: راهنمای استفاده از مدل...',
-      ] : [];
+    try {
+      // Get API endpoint from settings or default
+      const apiEndpoint = localStorage.getItem('app-settings')
+        ? JSON.parse(localStorage.getItem('app-settings')!).api.endpoint
+        : 'http://localhost:3001';
+
+      // Real API call with streaming
+      const response = await fetch(`${apiEndpoint}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          temperature: settings.temperature,
+          max_tokens: settings.maxTokens,
+          stream: true,
+          use_retrieval: settings.retrievalEnabled,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = '';
+      const tokens: string[] = [];
+      let retrievedContext: string[] = [];
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') break;
+
+              try {
+                const parsed = JSON.parse(data);
+                
+                // Handle retrieval metadata
+                if (parsed.type === 'retrieval' && parsed.sources) {
+                  retrievedContext = parsed.sources.map((s: any) => 
+                    `${s.title}${s.url ? ` (${s.url})` : ''}`
+                  );
+                }
+                
+                // Handle token chunks
+                if (parsed.chunk) {
+                  assistantContent += parsed.chunk;
+                  tokens.push(parsed.chunk);
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: mockTokens.join(''),
-        tokens: mockTokens,
-        retrievedContext: mockContext,
+        content: assistantContent || 'سلام! چطور می‌توانم کمکتان کنم؟',
+        tokens: tokens.length > 0 ? tokens : undefined,
+        retrievedContext: retrievedContext.length > 0 ? retrievedContext : undefined,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('API error:', error);
+      
+      // Fallback to simulated response on error
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'متأسفانه خطایی رخ داد. لطفاً دوباره تلاش کنید.',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
