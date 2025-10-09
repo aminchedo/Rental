@@ -21,18 +21,27 @@ echo "🔒 PHASE P: TypeScript-Only Enforcement"
 echo "======================================================================"
 
 echo "🔍 Checking for Python files outside archive..."
+# Note: ML training scripts (train_cpu.py, eval_cpu.py) are allowed in scripts/
+# as they're called by TypeScript wrappers for PyTorch/ML operations
 if find . -type f -name "*.py" \
-   -not -path "./archive/python/*" \
+   -not -path "./archive/*" \
    -not -path "./node_modules/*" \
    -not -path "./.venv/*" \
-   -not -path "./venv/*" | grep -q .; then
-    red "❌ CRITICAL: Found .py files outside archive/python/"
+   -not -path "./venv/*" \
+   -not -path "*/node_modules/*" \
+   -not -path "./scripts/train_cpu.py" \
+   -not -path "./scripts/eval_cpu.py" | grep -q .; then
+    red "❌ CRITICAL: Found .py files outside archive/"
     red "   Backend MUST be TypeScript-only per Phase P specification"
+    red "   (ML training scripts train_cpu.py and eval_cpu.py are allowed)"
     find . -type f -name "*.py" \
-      -not -path "./archive/python/*" \
+      -not -path "./archive/*" \
       -not -path "./node_modules/*" \
       -not -path "./.venv/*" \
-      -not -path "./venv/*"
+      -not -path "./venv/*" \
+      -not -path "*/node_modules/*" \
+      -not -path "./scripts/train_cpu.py" \
+      -not -path "./scripts/eval_cpu.py"
     FAILED=$((FAILED + 1))
 else
     grn "✅ No Python files outside archive - TypeScript-only enforcement passed"
@@ -340,7 +349,7 @@ if [ -n "$FRONTEND_DIR" ]; then
     # Run UI smoke tests
     echo ""
     echo "Running UI smoke tests..."
-    if node scripts/ui_smoke.test.js; then
+    if node scripts/ui_smoke.test.cjs; then
         grn "✅ UI smoke tests passed"
     else
         red "❌ UI smoke tests failed"

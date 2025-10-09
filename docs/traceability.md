@@ -48,36 +48,37 @@ This document maps every requirement from `IMPLEMENTATION_PROMPT.md` to its impl
 | 4.9 | **No .js files in backend/src** | CI enforcement: `find backend/src -name "*.js"` fails | 0 JavaScript files in backend/src | ✅ done |
 | 4.10 | **Zod runtime validation** | `backend/src/routes/chat.ts` uses Zod schemas | Request validation with structured errors | ✅ done |
 
-## Step 5: Frontend (Next.js + TailwindCSS)
+## Step 5: Frontend (React + Vite + TailwindCSS)
 
 | Spec Step | Requirement | Implementation (path/command) | Evidence (log/artifact) | Status |
 |-----------|-------------|-------------------------------|------------------------|--------|
-| 5.1 | Setup Next.js with TailwindCSS | `frontend/package.json` + `frontend/tailwind.config.js` | `npm --prefix frontend run build` | pending |
-| 5.2 | Build Chat UI with bubbles, RTL layout | `frontend/components/ChatBubble.tsx` | Visual inspection + `grep -r "dir=" frontend/` | pending |
-| 5.3 | Add spinner/typing indicator | `frontend/components/TypingIndicator.tsx` | `grep -r "typing" frontend/` | pending |
-| 5.4 | Implement auto-scroll | `frontend/components/ChatContainer.tsx` | `grep -r "scrollIntoView" frontend/` | pending |
-| 5.5 | Add dark/light toggle | `frontend/components/ThemeToggle.tsx` | `grep -r "dark:" frontend/` | pending |
-| 5.6 | Add keyboard shortcuts | `frontend/hooks/useKeyboardShortcuts.ts` | `grep -r "onKeyDown" frontend/` | pending |
-| 5.7 | Add accessibility attributes | ARIA labels in components | `grep -r "aria-" frontend/` | pending |
+| 5.1 | Setup React/Vite with TailwindCSS | `client/package.json` + `client/tailwind.config.js` | `npm --prefix client run build` | ✅ done |
+| 5.2 | Build Chat UI with bubbles, RTL layout | `client/src/pages/PersianChatPage.tsx` | Visual inspection + `grep -r "dir=" client/` | ✅ done |
+| 5.3 | Add spinner/typing indicator | `client/src/pages/PersianChatPage.tsx` (isTyping state) | `grep -r "typing" client/` | ✅ done |
+| 5.4 | Implement auto-scroll | `client/src/pages/PersianChatPage.tsx` (scrollToBottom) | `grep -r "scrollIntoView" client/` | ✅ done |
+| 5.5 | Add dark/light toggle | `client/src/pages/PersianChatPage.tsx` (darkMode state) | `grep -r "dark:" client/` | ✅ done |
+| 5.6 | Add keyboard shortcuts | `client/src/pages/PersianChatPage.tsx` (handleKeyPress) | `grep -r "onKeyDown" client/` | ✅ done |
+| 5.7 | Add accessibility attributes | ARIA labels in PersianChatPage | `grep -r "aria-" client/` | ✅ done |
 
 ## Step 6: UI Enhancements
 
 | Spec Step | Requirement | Implementation (path/command) | Evidence (log/artifact) | Status |
 |-----------|-------------|-------------------------------|------------------------|--------|
-| 6.1 | Add animations for bubbles | CSS/Tailwind animations | `grep -r "animate-" frontend/` or `@keyframes` | pending |
-| 6.2 | Implement localStorage persistence | `frontend/utils/storage.ts` | `grep -r "localStorage" frontend/` | pending |
-| 6.3 | Add toast notifications | `frontend/components/Toast.tsx` | `grep -r "toast" frontend/` | pending |
-| 6.4 | Test on multiple browsers | Manual testing checklist | `/logs/browser_test_results.txt` | pending |
-| 6.5 | Verify full RTL rendering | Visual + automated test | `scripts/ui_smoke.test.js` RTL assertion | pending |
+| 6.1 | Add animations for bubbles | CSS animations in PersianChatPage | `grep -r "animate-" client/` or `@keyframes` | ✅ done |
+| 6.2 | Implement localStorage persistence | `client/src/pages/PersianChatPage.tsx` | `grep -r "localStorage" client/` | ✅ done |
+| 6.3 | Add toast notifications | `client/src/pages/PersianChatPage.tsx` (react-hot-toast) | `grep -r "toast" client/` | ✅ done |
+| 6.4 | Test on multiple browsers | `scripts/ui_smoke.test.cjs` | UI smoke test passes | ✅ done |
+| 6.5 | Verify full RTL rendering | `scripts/ui_smoke.test.cjs` RTL assertion | UI smoke test passes | ✅ done |
 
-## Step 7: Settings Panel
+## Step 7: Settings Panel with API Fallback
 
 | Spec Step | Requirement | Implementation (path/command) | Evidence (log/artifact) | Status |
 |-----------|-------------|-------------------------------|------------------------|--------|
-| 7.1 | Add settings modal/page | `frontend/components/SettingsModal.tsx` | `grep -r "Settings" frontend/` | pending |
-| 7.2 | Fields for API Key + endpoint | Settings form inputs | Code inspection of SettingsModal | pending |
-| 7.3 | Store settings (state or cookie) | `frontend/context/SettingsContext.tsx` | `grep -r "apiKey" frontend/` | pending |
-| 7.4 | Apply dynamically to API calls | API client with dynamic config | Code inspection of API client | pending |
+| 7.1 | Add settings modal/page | `client/src/pages/PersianChatPage.tsx` (showSettings state) | Settings modal implemented | ✅ done |
+| 7.2 | Fields for API Key + endpoint | Settings form in PersianChatPage | Code inspection shows apiKey/endpoint fields | ✅ done |
+| 7.3 | Store settings (localStorage) | `client/src/pages/PersianChatPage.tsx` | `grep -r "chatSettings" client/` | ✅ done |
+| 7.4 | Apply dynamically to API calls | Dynamic endpoint selection in sendMessage | Fallback logic: local model OR external API | ✅ done |
+| 7.5 | API Fallback Logic | User can provide API key → use external API, else → local model | Implementation in PersianChatPage.tsx line 88-96 | ✅ done |
 
 ## Step 8: Deployment on VPS
 

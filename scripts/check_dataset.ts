@@ -297,9 +297,11 @@ function main(): void {
   }
 }
 
+export { normalizePersian, validateMessageFormat, calculateSHA256, checkDataset };
+
 // Execute if run directly
-if (require.main === module) {
+import { fileURLToPath } from 'url';
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
   main();
 }
-
-export { normalizePersian, validateMessageFormat, calculateSHA256, checkDataset };
