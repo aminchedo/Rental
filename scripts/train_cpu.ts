@@ -20,7 +20,9 @@ interface TrainingArgs {
   seed?: number;
   model_name?: string;
   dataset?: string;
+  data?: string;  // Alias for dataset
   output_dir?: string;
+  log_file?: string;
 }
 
 /**
@@ -58,11 +60,14 @@ async function trainModel(args: TrainingArgs): Promise<void> {
   if (args.model_name) {
     commandArgs.push('--model_name', args.model_name);
   }
-  if (args.dataset) {
-    commandArgs.push('--dataset', args.dataset);
+  if (args.dataset || args.data) {
+    commandArgs.push('--dataset', args.dataset || args.data || '');
   }
   if (args.output_dir) {
     commandArgs.push('--output_dir', args.output_dir);
+  }
+  if (args.log_file) {
+    commandArgs.push('--log_file', args.log_file);
   }
   
   console.log('🚀 Starting Python training process...');
@@ -125,8 +130,14 @@ function parseArgs(): TrainingArgs {
       case '--dataset':
         args.dataset = value;
         break;
+      case '--data':
+        args.data = value;
+        break;
       case '--output_dir':
         args.output_dir = value;
+        break;
+      case '--log_file':
+        args.log_file = value;
         break;
       default:
         console.warn(`Unknown argument: ${key}`);
