@@ -83,7 +83,7 @@ export async function makeApiRequest(
   config: ApiConfig,
   payload: any
 ): Promise<Response> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   
