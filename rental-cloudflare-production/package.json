@@ -1,0 +1,61 @@
+{
+  "name": "rental-management-cloudflare",
+  "version": "2.0.0",
+  "description": "Professional Rental Management System on Cloudflare Stack",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:prod": "wrangler deploy --env production",
+    "build": "tsc",
+    "build:client": "cd client && npm run build",
+    "install-all": "npm install && cd client && npm install",
+    "start": "concurrently \"npm run dev\" \"cd client && npm run dev\"",
+    "db:create": "wrangler d1 create rental-management-db",
+    "db:migrate": "wrangler d1 execute rental-management-db --file=schema.sql",
+    "db:migrate:local": "wrangler d1 execute rental-management-db --local --file=schema.sql",
+    "kv:create": "wrangler kv:namespace create RENTAL_KV",
+    "secrets:setup": "npm run secrets:jwt && npm run secrets:email",
+    "secrets:jwt": "node generate-session-secret.js && wrangler secret put JWT_SECRET",
+    "secrets:email": "wrangler secret put EMAIL_USER && wrangler secret put EMAIL_PASS",
+    "secrets:telegram": "wrangler secret put TELEGRAM_BOT_TOKEN",
+    "secrets:whatsapp": "wrangler secret put WHATSAPP_ACCOUNT_SID && wrangler secret put WHATSAPP_AUTH_TOKEN",
+    "test": "wrangler dev --test-scheduled",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src/**/*.{ts,tsx}"
+  },
+  "dependencies": {
+    "hono": "^4.6.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.78.12"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "d1",
+    "pages",
+    "rental-management",
+    "hono",
+    "persian",
+    "real-estate"
+  ],
+  "author": "Professional Rental Management System",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,81 @@
+name = "rental-management-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Enable observability for monitoring
+[observability]
+enabled = true
+
+# D1 Database configuration with the user's actual ID
+[[d1_databases]]
+binding = "DB"
+database_name = "rental-management-db"
+database_id = "0d8ca16e-3a0c-45df-ac98-dd53234e5a98"
+
+# KV Namespace for caching and sessions with the user's actual ID
+[[kv_namespaces]]
+binding = "RENTAL_KV"
+id = "ce35ad48265c4253b1b81e428dda1252"
+
+# Environment variables (non-sensitive)
+[vars]
+ENVIRONMENT = "production"
+APP_NAME = "Professional Rental Management System"
+APP_VERSION = "2.0.0"
+DEFAULT_LOCALE = "fa-IR"
+
+# Secrets (sensitive data - set via wrangler secret put)
+# JWT_SECRET - JWT signing secret (generate with generate-session-secret.js)
+# EMAIL_USER - Email service username/API key (Resend API key recommended)
+# EMAIL_PASS - Email service password/API secret
+# TELEGRAM_BOT_TOKEN - Telegram bot token (optional)
+# WHATSAPP_ACCOUNT_SID - Twilio WhatsApp Account SID (optional)
+# WHATSAPP_AUTH_TOKEN - Twilio WhatsApp Auth Token (optional)
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Assets configuration for static files
+[assets]
+bucket = "./client/dist"
+binding = "ASSETS"
+
+# Development configuration
+[env.development]
+name = "rental-management-api-dev"
+
+[env.development.vars]
+ENVIRONMENT = "development"
+
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "rental-management-db-dev"
+database_id = "0d8ca16e-3a0c-45df-ac98-dd53234e5a98"
+
+# Production configuration  
+[env.production]
+name = "rental-management-api"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "rental-management-db"
+database_id = "0d8ca16e-3a0c-45df-ac98-dd53234e5a98"
+
+# Route configuration for Pages integration
+[[routes]]
+pattern = "/api/*"
+zone_name = "your-domain.com"
+
+# Headers configuration
+[headers]
+"/*" = [
+  { key = "X-Frame-Options", value = "DENY" },
+  { key = "X-Content-Type-Options", value = "nosniff" },
+  { key = "Referrer-Policy", value = "strict-origin-when-cross-origin" },
+  { key = "Permissions-Policy", value = "geolocation=(), microphone=(), camera=()" }
+]
