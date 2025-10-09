@@ -3,17 +3,16 @@ import { api, endpoints } from '../config/api';
 
 interface User {
   id: string;
-  role: 'admin' | 'tenant' | 'landlord';
+  role: 'admin' | 'user';
   name: string;
-  username?: string;
-  contractNumber?: string;
-  contract?: any;
+  email?: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: User | null;
-  login: (credentials: { contractNumber: string; accessCode: string }, userType: 'admin' | 'tenant') => Promise<boolean>;
+  login: (credentials: { email: string; password: string }) => Promise<boolean>;
   logout: () => void;
   setCurrentUser: (user: User | null) => void;
   setAuthenticated: (authenticated: boolean) => void;
@@ -55,48 +54,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (credentials: { contractNumber: string; accessCode: string }, userType: 'admin' | 'tenant'): Promise<boolean> => {
-    const { contractNumber, accessCode } = credentials;
+  const login = async (credentials: { email: string; password: string }): Promise<boolean> => {
+    const { email, password } = credentials;
 
     try {
-      let loginData;
-      
-      if (userType === 'admin') {
-        loginData = {
-          username: contractNumber,
-          password: accessCode
-        };
-      } else {
-        loginData = {
-          contractNumber,
-          accessCode
-        };
-      }
-
-      const response = await api.post(endpoints.login, loginData);
+      const response = await api.post(endpoints.login, { email, password });
 
       if (response.data.success && response.data.token) {
         // Store JWT token
         localStorage.setItem('authToken', response.data.token);
         
-        let user: User;
-        
-        if (userType === 'admin') {
-          user = {
-            id: response.data.user.id,
-            role: 'admin',
-            name: 'مدیر سیستم',
-            username: response.data.user.username
-          };
-        } else {
-          user = {
-            id: response.data.contract.id,
-            role: 'tenant',
-            name: 'مستأجر',
-            contractNumber: response.data.contract.contractNumber,
-            contract: response.data.contract
-          };
-        }
+        const user: User = {
+          id: response.data.user.id,
+          role: response.data.user.role || 'user',
+          name: response.data.user.name || 'کاربر',
+          email: response.data.user.email,
+          avatar: response.data.user.avatar,
+        };
         
         // Store user data
         localStorage.setItem('user', JSON.stringify(user));

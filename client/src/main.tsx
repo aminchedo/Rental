@@ -1,12 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import ChatApp from './ChatApp.tsx'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App.tsx'
 import './index.css'
 
-// Use ChatApp (Persian Chat) as the main app
-// To switch to the rental management app, import App instead
+// Unified AI Chat & Monitoring Application
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ChatApp />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>,
 )
