@@ -552,14 +552,15 @@ bash scripts/validate_api.sh
 
 #### Settings Panel (API Override + Local Fallback)
 - ✅ **Settings Modal**: Configure API endpoint and keys (`MonitoringSettingsPage.tsx`)
-- ✅ **Dynamic Application**: Apply settings without reload
-- ✅ **Persistence**: Save settings to localStorage
+- ✅ **Dynamic Application**: Apply settings without reload (live apply via `document.documentElement.setAttribute('dir', ...)`)
+- ✅ **Persistence**: Save settings to localStorage (`localStorage.setItem('app-settings', ...)`)
 - ✅ **Validation**: Real-time input validation
-- ✅ **API Override Logic**: 
-  - If custom endpoint + API key configured → use external API
-  - Otherwise → use local model
-  - All routes logged to `/logs/api.log` with source tracking
-- ✅ **RTL/LTR Toggle**: Switch text direction on-the-fly (Persian RTL default)
+- ✅ **API Override Logic** (implemented in `backend/src/services/apiConfig.ts`): 
+  - If custom endpoint + API key configured (env: `CUSTOM_API_ENDPOINT`, `CUSTOM_API_KEY`) → use external API
+  - Otherwise → use local model at `http://localhost:3001`
+  - All routes logged to `/logs/api.log` with source tracking (`"api_source":"local"` or `"api_source":"external"`)
+- ✅ **RTL/LTR Toggle**: Switch text direction on-the-fly via Settings UI (Persian RTL default via `html[dir="rtl"]`)
+- ✅ **Evidence**: Check `/logs/api.log` for both local and external API route entries
 
 ### Directory Structure
 
