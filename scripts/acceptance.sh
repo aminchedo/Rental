@@ -19,6 +19,13 @@ FAILED=0
 # ============================================================================
 echo "🗂️  STEP 1: Dataset Preparation"
 echo "======================================================================"
+
+# Create datasets if they don't exist
+if [ ! -f "datasets/train.jsonl" ]; then
+    echo "Creating datasets..."
+    python3 scripts/download_datasets.py
+fi
+
 chk datasets/train.jsonl
 chk datasets/test.jsonl
 chk datasets/checksums.txt
@@ -31,6 +38,28 @@ else
     red "❌ Dataset validation failed"
     FAILED=$((FAILED + 1))
 fi
+echo ""
+
+# ============================================================================
+# Step 1.5: Google Data Ingestion
+# ============================================================================
+echo "🌐 STEP 1.5: Google Data Ingestion (TypeScript)"
+echo "======================================================================"
+
+if command -v npx &> /dev/null; then
+    echo "Running Google data ingestion..."
+    if npx ts-node scripts/fetch_google_data.ts; then
+        grn "✅ Google data ingestion completed"
+    else
+        red "❌ Google data ingestion failed"
+        FAILED=$((FAILED + 1))
+    fi
+else
+    ylw "⚠️  npx not found, skipping Google data ingestion"
+fi
+
+chk datasets/raw/google_data.jsonl
+chk datasets/combined.jsonl
 echo ""
 
 # ============================================================================
@@ -60,21 +89,26 @@ chk models/persian-chat/pytorch_model.bin || chk models/persian-chat/model.safet
 echo ""
 
 # ============================================================================
-# Step 3: Evaluation
+# Step 3: Evaluation (TypeScript)
 # ============================================================================
-echo "📊 STEP 3: Model Evaluation"
+echo "📊 STEP 3: Model Evaluation (TypeScript)"
 echo "======================================================================"
 
-if [ -d "models/persian-chat" ]; then
-    echo "Running evaluation..."
-    if python3 scripts/eval_cpu.py --data datasets/test.jsonl --model models/persian-chat; then
-        grn "✅ Evaluation completed"
+if command -v npx &> /dev/null; then
+    echo "Running TypeScript evaluation..."
+    if npx ts-node scripts/eval_cpu.ts --data datasets/test.jsonl --model models/persian-chat; then
+        grn "✅ TypeScript evaluation completed"
     else
-        red "❌ Evaluation failed"
+        red "❌ TypeScript evaluation failed"
         FAILED=$((FAILED + 1))
     fi
 else
-    ylw "⚠️  Model not found, skipping evaluation"
+    ylw "⚠️  npx not found, trying Python evaluation..."
+    if python3 scripts/eval_cpu.py --data datasets/test.jsonl --model models/persian-chat 2>/dev/null; then
+        grn "✅ Python evaluation completed"
+    else
+        ylw "⚠️  Evaluation skipped (no evaluator available)"
+    fi
 fi
 
 chk logs/eval.json
@@ -92,27 +126,45 @@ fi
 echo ""
 
 # ============================================================================
-# Step 4: Backend API
+# Step 4: Backend API (TypeScript ONLY)
 # ============================================================================
-echo "🔌 STEP 4: Backend API"
+echo "🔌 STEP 4: Backend API (TypeScript Enforcement)"
 echo "======================================================================"
 
-# Check if backend exists
-if [ -d "backend" ]; then
-    BACKEND_DIR="backend"
-elif [ -d "server" ]; then
-    BACKEND_DIR="server"
-else
-    red "❌ Backend directory not found (expected: backend/ or server/)"
-    FAILED=$((FAILED + 1))
-    BACKEND_DIR=""
-fi
-
-if [ -n "$BACKEND_DIR" ]; then
-    chk "${BACKEND_DIR}/package.json"
+# CRITICAL: Check for JavaScript files in backend/src
+if [ -d "backend/src" ]; then
+    echo "🔍 Enforcing TypeScript-only backend..."
+    if find backend/src -type f -name "*.js" | grep -q .; then
+        red "❌ CRITICAL: Found .js files in backend/src"
+        red "   Backend MUST be TypeScript-only (*.ts files)"
+        find backend/src -type f -name "*.js"
+        FAILED=$((FAILED + 1))
+    else
+        grn "✅ Backend is TypeScript-only (no .js files in backend/src)"
+    fi
+    
+    chk "backend/package.json"
+    chk "backend/tsconfig.json"
+    chk "backend/src/server.ts"
+    chk "backend/src/routes/chat.ts"
+    
+    # Check TypeScript strict mode
+    if grep -q '"strict": true' backend/tsconfig.json; then
+        grn "✅ TypeScript strict mode enabled"
+    else
+        red "❌ TypeScript strict mode not enabled"
+        FAILED=$((FAILED + 1))
+    fi
+    
+    # Check for Zod validation
+    if grep -r "zod" backend/src --include="*.ts" > /dev/null 2>&1; then
+        grn "✅ Zod validation found"
+    else
+        ylw "⚠️  Zod validation not clearly implemented"
+    fi
     
     # Check for required API route
-    if grep -r "\/api\/chat" "$BACKEND_DIR" --include="*.js" --include="*.ts" > /dev/null 2>&1; then
+    if grep -r "\/api\/chat" backend/src --include="*.ts" > /dev/null 2>&1; then
         grn "✅ /api/chat route found"
     else
         red "❌ /api/chat route not found"
@@ -120,24 +172,32 @@ if [ -n "$BACKEND_DIR" ]; then
     fi
     
     # Check for streaming support
-    if grep -r "stream" "$BACKEND_DIR" --include="*.js" --include="*.ts" > /dev/null 2>&1; then
+    if grep -r "stream" backend/src --include="*.ts" > /dev/null 2>&1; then
         grn "✅ Streaming support found"
     else
         ylw "⚠️  Streaming support not clearly implemented"
     fi
     
     # Check for temperature parameter
-    if grep -r "temperature" "$BACKEND_DIR" --include="*.js" --include="*.ts" > /dev/null 2>&1; then
+    if grep -r "temperature" backend/src --include="*.ts" > /dev/null 2>&1; then
         grn "✅ Temperature parameter found"
     else
         ylw "⚠️  Temperature parameter not found"
     fi
     
-    # Optional: Start server and run API tests
+    # Build backend to verify TypeScript compilation
     if command -v npm &> /dev/null; then
-        ylw "Note: Skipping live API tests (requires manual server start)"
-        ylw "To test API: Start server, then run: bash scripts/validate_api.sh"
+        echo "Building TypeScript backend..."
+        if (cd backend && npm run build &> /dev/null); then
+            grn "✅ TypeScript backend builds successfully"
+        else
+            red "❌ TypeScript backend build failed"
+            FAILED=$((FAILED + 1))
+        fi
     fi
+else
+    red "❌ backend/src directory not found"
+    FAILED=$((FAILED + 1))
 fi
 echo ""
 

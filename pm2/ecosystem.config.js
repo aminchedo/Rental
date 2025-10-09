@@ -9,11 +9,11 @@
 
 module.exports = {
   apps: [
-    // Backend API Server
+    // Backend API Server (TypeScript compiled to dist/)
     {
       name: 'persian-chat-api',
-      script: './server.js',  // or './index.js' depending on your setup
-      cwd: './backend',  // Adjust to your backend directory (could be './server')
+      script: './dist/server.js',  // TypeScript compiled output
+      cwd: './backend',  // TypeScript backend directory
       instances: 2,  // Number of instances (for load balancing)
       exec_mode: 'cluster',
       watch: false,  // Set to true for development
