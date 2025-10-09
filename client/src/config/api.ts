@@ -1,4 +1,4 @@
-// API Configuration for Cloudflare Workers
+// API Configuration for AI Chat & Monitoring System
 import axios from 'axios';
 
 // Get API URL from environment variables
@@ -56,17 +56,17 @@ export const endpoints = {
   // Authentication
   login: '/api/login',
   
-  // Contracts
-  contracts: '/api/contracts',
-  signContract: (contractNumber: string) => `/api/contracts/${contractNumber}/sign`,
+  // AI Chat
+  chat: '/api/chat',
+  chatHistory: '/api/chat/history',
   
-  // Charts and Analytics  
-  incomeChart: '/api/charts/income',
-  statusChart: '/api/charts/status',
+  // Monitoring & Metrics
+  metrics: '/api/metrics',
+  experiments: '/api/experiments',
+  logs: '/api/logs',
   
-  // Notifications
-  notificationSettings: '/api/settings/notifications',
-  testNotification: '/api/notifications/test',
+  // Settings
+  settings: '/api/settings',
   
   // Health check
   health: '/api/health',

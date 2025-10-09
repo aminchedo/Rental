@@ -1,18 +1,14 @@
 /**
- * AppRouter - Unified routing for all application features
+ * AppRouter - AI Chat & Monitoring System
  * 
  * Routes:
  * - /chat - Persian chat interface
+ * - /home - Home/Overview page
  * - /metrics - Metrics dashboard
  * - /monitor - Live monitoring
  * - /monitor/settings - Monitoring settings
- * - /dashboard - Contract management dashboard
- * - /contract/new - Create new contract
- * - /tenant - Tenant view
- * - /financial - Financial reports
- * - /notifications - Notifications page
- * - /app-settings - Application settings
- * - /login - Login page
+ * - /experiments - Experiments tracking
+ * - /playground - Playground for testing
  */
 
 import React from 'react';
@@ -27,15 +23,6 @@ import MonitoringSettingsPage from './pages/MonitoringSettingsPage';
 import ExperimentsPage from './pages/ExperimentsPage';
 import PlaygroundPage from './pages/PlaygroundPage';
 import HomePage from './pages/HomePage';
-
-// Rental Management Pages
-import DashboardPage from './pages/DashboardPage';
-import ContractFormPage from './pages/ContractFormPage';
-import TenantViewPage from './pages/TenantViewPage';
-import FinancialReportsPage from './pages/FinancialReportsPage';
-import NotificationsPage from './pages/NotificationsPage';
-import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage';
 
 // 404 Page Component
 const NotFoundPage: React.FC = () => {
@@ -65,23 +52,16 @@ const AppRouter: React.FC = () => {
         {/* Default redirect to chat */}
         <Route index element={<Navigate to="/chat" replace />} />
         
-        {/* Chat & Monitoring Routes */}
+        {/* AI Chat */}
         <Route path="chat" element={<PersianChatPage />} />
+        
+        {/* Monitoring & Analytics */}
+        <Route path="home" element={<HomePage />} />
         <Route path="metrics" element={<MetricsDashboard />} />
         <Route path="monitor" element={<LiveMonitorPage />} />
         <Route path="monitor/settings" element={<MonitoringSettingsPage />} />
         <Route path="experiments" element={<ExperimentsPage />} />
         <Route path="playground" element={<PlaygroundPage />} />
-        <Route path="home" element={<HomePage />} />
-        
-        {/* Rental Management Routes */}
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="contract/new" element={<ContractFormPage />} />
-        <Route path="tenant" element={<TenantViewPage />} />
-        <Route path="financial" element={<FinancialReportsPage />} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="app-settings" element={<SettingsPage />} />
-        <Route path="login" element={<LoginPage />} />
         
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />
