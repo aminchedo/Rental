@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, User, Building2, MapPin, DollarSign, CheckCircle, 
   AlertCircle, Home, Upload, CreditCard, Shield, ChevronRight, 
@@ -10,14 +11,16 @@ import { useContracts } from '../context/ContractContext';
 
 interface ContractFormPageProps {
   selectedContract?: any;
-  onNavigateToDashboard: () => void;
-  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  onNavigateToDashboard?: () => void;
+  addNotification?: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
 const ContractFormPage: React.FC<ContractFormPageProps> = ({
   selectedContract,
-  onNavigateToDashboard
-}) => {
+  onNavigateToDashboard,
+  addNotification
+} = {}) => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { addContract, signContract, lookupTenantByNationalId, lookupLandlordByNationalId } = useContracts();
   
@@ -232,7 +235,11 @@ const ContractFormPage: React.FC<ContractFormPageProps> = ({
       const contract = await addContract(formData);
       toast.success(`قرارداد ${contract.contractNumber} ایجاد شد و کد دسترسی به ${contract.tenantName} ارسال گردید`);
       
-      onNavigateToDashboard();
+      if (onNavigateToDashboard) {
+        onNavigateToDashboard();
+      } else {
+        navigate('/dashboard');
+      }
       resetForm();
     } catch (error) {
       toast.error('خطا در ایجاد قرارداد');

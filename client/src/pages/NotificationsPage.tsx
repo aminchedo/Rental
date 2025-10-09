@@ -9,14 +9,14 @@ interface Notification {
 }
 
 interface NotificationsPageProps {
-  notifications: Notification[];
-  onClearNotifications: () => void;
+  notifications?: Notification[];
+  onClearNotifications?: () => void;
 }
 
 const NotificationsPage: React.FC<NotificationsPageProps> = ({ 
-  notifications, 
+  notifications = [], 
   onClearNotifications 
-}) => {
+} = {}) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { api, endpoints } from '../config/api';
 
 interface SettingsPageProps {
-  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  addNotification?: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
 interface NotificationSetting {

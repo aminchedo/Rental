@@ -5,11 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { useContracts } from '../context/ContractContext';
 
 interface LoginPageProps {
-  onTenantLogin: (contract: any) => void;
-  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  onTenantLogin?: (contract: any) => void;
+  addNotification?: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onTenantLogin, addNotification } = {}) => {
   const [loginForm, setLoginForm] = useState({ contractNumber: '', accessCode: '' });
   const [isLoading, setIsLoading] = useState(false);
   const { login, setCurrentUser, setAuthenticated } = useAuth();

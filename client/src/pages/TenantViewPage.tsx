@@ -8,11 +8,11 @@ import { useContracts } from '../context/ContractContext';
 import ImageUploadModal from '../components/ImageUploadModal';
 
 interface TenantViewPageProps {
-  contract: any;
-  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  contract?: any;
+  addNotification?: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
-const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotification }) => {
+const TenantViewPage: React.FC<TenantViewPageProps> = ({ contract, addNotification } = {}) => {
   const { } = useAuth();
   const { signContract } = useContracts();
   

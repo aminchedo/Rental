@@ -13,6 +13,17 @@
         font-family: 'Vazirmatn', 'Tahoma', Arial, sans-serif !important;
       }
     </style>
+    <script>
+      // Apply saved/system theme before React mounts (no FOUC)
+      (function() {
+        try {
+          const saved = localStorage.getItem('darkMode');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const useDark = saved ? JSON.parse(saved) : prefersDark;
+          document.documentElement.classList.toggle('dark', useDark);
+        } catch {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

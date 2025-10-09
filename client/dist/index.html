@@ -13,11 +13,22 @@
         font-family: 'Vazirmatn', 'Tahoma', Arial, sans-serif !important;
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-b51d0049.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/vendor-3e04ef71.js">
-    <link rel="modulepreload" crossorigin href="/assets/utils-f4985bed.js">
-    <link rel="modulepreload" crossorigin href="/assets/charts-1c6a6dbe.js">
-    <link rel="stylesheet" href="/assets/index-558beba4.css">
+    <script>
+      // Apply saved/system theme before React mounts (no FOUC)
+      (function() {
+        try {
+          const saved = localStorage.getItem('darkMode');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const useDark = saved ? JSON.parse(saved) : prefersDark;
+          document.documentElement.classList.toggle('dark', useDark);
+        } catch {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-2f5b5c6a.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-9b870073.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-bbad743c.js">
+    <link rel="modulepreload" crossorigin href="/assets/charts-091d8687.js">
+    <link rel="stylesheet" href="/assets/index-3e2d7776.css">
   </head>
   <body>
     <div id="root"></div>

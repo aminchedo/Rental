@@ -8,7 +8,7 @@ import ExpenseForm from '../components/ExpenseForm';
 import axios from 'axios';
 
 interface FinancialReportsPageProps {
-  addNotification: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  addNotification?: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
 }
 
 interface Expense {
