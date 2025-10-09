@@ -1,112 +1,148 @@
-# سیستم حرفه‌ای مدیریت اجاره‌نامه
+# Model Training Tutorial
 
-یک سیستم کامل و امن برای مدیریت قراردادهای اجاره با قابلیت امضای دیجیتال و احراز هویت.
+A clean, well-structured tutorial for training machine learning models from scratch. This repository provides a complete pipeline from data preparation to model evaluation with practical examples and best practices.
 
-## ✨ ویژگی‌های جدید (آپدیت اخیر)
+## 🎯 Overview
 
-### 🆔 آپلود کارت ملی
-- قابلیت آپلود تصویر کارت ملی برای احراز هویت بهتر
-- اختیاری - در صورت عدم آپلود، شماره ملی باید در زیر امضا نوشته شود
-- پشتیبانی از فرمت‌های مختلف تصویر
-- محدودیت حجم 10 مگابایت
+This tutorial demonstrates:
+- Data preparation and preprocessing
+- Model training with scikit-learn
+- Model evaluation and metrics reporting
+- Reproducible ML workflows
+- Best practices for organizing ML projects
 
-### 🔒 بهبود امنیت
-- احراز هویت دوگانه با امضا و کارت ملی
-- راهنمای واضح برای کاربران
-- ذخیره امن تصاویر در سیستم
+## 🚀 Quick Start
 
-## 🚀 راه‌اندازی سریع
+### Prerequisites
 
-### پیش‌نیازها
-- Node.js 18+ 
-- npm یا yarn
+- Python 3.8+
+- pip or conda
 
-### نصب و راه‌اندازی
+### Installation
+
 ```bash
-# نصب همه وابستگی‌ها
-npm run install-all
-
-# اجرای سیستم (سرور + کلاینت)
-npm start
+pip install -r requirements.txt
 ```
 
-### دسترسی به سیستم
-- **کلاینت React**: http://localhost:3000
-- **سرور API**: http://localhost:5001
-- **مدیر سیستم**: admin / admin (⚠️ در محیط تولید حتماً تغییر دهید)
-- **مستأجر**: شماره قرارداد + کد دسترسی
+### Run Complete Pipeline
 
-## 📁 ساختار پروژه
-
-```
-rental-management-system/
-├── package.json              # اسکریپت‌های اصلی
-├── server/                   # بک‌اند Node.js
-│   ├── server.js            # سرور Express
-│   ├── contracts.csv        # دیتابیس CSV
-│   └── package.json
-├── client/                   # فرانت‌اند React
-│   ├── src/
-│   │   ├── App.tsx          # کامپوننت اصلی (با ویژگی کارت ملی)
-│   │   ├── main.tsx
-│   │   └── index.css
-│   ├── package.json
-│   └── vite.config.ts
-└── README.md
-```
-
-## 🎯 ویژگی‌های کلیدی
-
-### برای مدیران (موجر)
-- ✅ ایجاد قراردادهای جدید
-- ✅ مدیریت تمام قراردادها
-- ✅ ارسال کد دسترسی به مستأجر
-- ✅ مشاهده وضعیت امضا
-- ✅ دانلود PDF قراردادها
-- ✅ فسخ و حذف قراردادها
-
-### برای مستأجران
-- ✅ ورود با شماره قرارداد و کد دسترسی
-- ✅ بررسی جزئیات قرارداد
-- ✅ آپلود امضای دیجیتال
-- ✅ **جدید**: آپلود تصویر کارت ملی (اختیاری)
-- ✅ امضای امن قرارداد
-- ✅ دریافت PDF امضا شده
-
-## 🔐 امنیت
-
-- احراز هویت دوگانه
-- کدهای دسترسی یکتا
-- ذخیره امن داده‌ها در CSV
-- محدودیت دسترسی بر اساس نقش
-- **جدید**: احراز هویت با کارت ملی
-
-## 📱 واکنش‌گرا
-
-- طراحی موبایل فرست
-- رابط کاربری فارسی
-- پشتیبانی از تمام مرورگرها
-- تجربه کاربری بهینه
-
-## 🛠 توسعه
-
-### اجرای محیط توسعه
 ```bash
-# سرور (پورت 5001)
-cd server && npm start
+# 1. Prepare synthetic data
+python scripts/prepare_data.py --synthetic 500 --output data/processed
 
-# کلاینت (پورت 3000)  
-cd client && npm start
+# 2. Train model
+python scripts/train.py --data data/processed/train.json --out models/checkpoints --epochs 100
+
+# 3. Evaluate model
+python scripts/evaluate.py --model models/checkpoints/latest.pkl --data data/processed/test.json --report reports/metrics.json
 ```
 
-### ساخت برای تولید
+### View Results
+
 ```bash
-cd client && npm run build
+cat reports/metrics.json
 ```
 
-## 📞 پشتیبانی
+## 📁 Project Structure
 
-برای گزارش مشکلات یا درخواست ویژگی جدید، لطفاً issue ایجاد کنید.
+```
+.
+├── README.md                    # This file
+├── requirements.txt             # Python dependencies
+├── scripts/                     # Training pipeline scripts
+│   ├── prepare_data.py         # Data preparation
+│   ├── train.py                # Model training
+│   └── evaluate.py             # Model evaluation
+├── notebooks/                   # Jupyter tutorials
+│   ├── 01_prepare_data.ipynb   # Data prep walkthrough
+│   ├── 02_train_model.ipynb    # Training walkthrough
+│   └── 03_evaluate_model.ipynb # Evaluation walkthrough
+├── data/                        # Data storage
+│   ├── raw/                    # Raw input data
+│   └── processed/              # Processed datasets
+├── models/                      # Model artifacts
+│   └── checkpoints/            # Saved models
+└── reports/                     # Evaluation reports
+    └── metrics.json            # Model metrics
+```
+
+## 📚 Documentation
+
+- **[Tutorial](docs/tutorial.md)** - Complete end-to-end guide
+- **[Quick Start](docs/quickstart.md)** - Get up and running fast
+- **[Dataset Guidelines](docs/dataset-guidelines.md)** - Data format and best practices
+- **[Evaluation Guide](docs/evaluation-guide.md)** - Understanding metrics and results
+
+## 🔬 Using Jupyter Notebooks
+
+```bash
+jupyter notebook
+```
+
+Then navigate to `notebooks/` and run the tutorials in order:
+1. `01_prepare_data.ipynb` - Learn data preparation
+2. `02_train_model.ipynb` - Train your first model
+3. `03_evaluate_model.ipynb` - Evaluate performance
+
+## 🛠️ Development
+
+### Running Tests
+
+```bash
+python scripts/prepare_data.py --help
+python scripts/train.py --dry-run
+python scripts/evaluate.py --dry-run
+```
+
+### Custom Data
+
+Replace synthetic data with your own:
+
+```bash
+python scripts/prepare_data.py --input path/to/your/data.json --output data/processed
+```
+
+Your data should follow this format:
+```json
+{
+  "features": [[...], [...], ...],
+  "labels": [0, 1, ...]
+}
+```
+
+## 📊 Example Results
+
+After running the pipeline, you'll see metrics like:
+
+```json
+{
+  "accuracy": 0.95,
+  "precision": 0.94,
+  "recall": 0.95,
+  "f1_score": 0.94,
+  "n_samples": 100
+}
+```
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 📝 License
+
+This project is provided as-is for educational purposes.
+
+## 🙋 Support
+
+For questions or issues:
+- Check the [documentation](docs/)
+- Open an issue on GitHub
+- Review the example notebooks
 
 ---
-**نسخه:** 1.0.0 | **آخرین بروزرسانی:** آپلود کارت ملی
+
+**Made with ❤️ for ML learners everywhere**
