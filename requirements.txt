@@ -1,0 +1,27 @@
+# Python Requirements for Persian Chat Application
+# CPU-optimized versions for VPS deployment
+
+# Core ML/NLP libraries
+torch>=2.0.0
+transformers>=4.30.0
+datasets>=2.14.0
+accelerate>=0.20.0
+
+# Utilities
+tqdm>=4.65.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Text processing
+regex>=2023.6.3
+sentencepiece>=0.1.99
+tokenizers>=0.13.3
+
+# Optional: For advanced features
+# huggingface-hub>=0.16.0
+# safetensors>=0.3.1
+
+# Development/Testing (optional)
+# pytest>=7.4.0
+# black>=23.3.0
+# flake8>=6.0.0
