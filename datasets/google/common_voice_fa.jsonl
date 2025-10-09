@@ -1,0 +1,2 @@
+{"audio":"audio/raw/common_voice_fa_128.wav","text":"من به دنبال اطلاعات در مورد هوش مصنوعی هستم","lang":"fa","speaker_id":"common_voice_fa_128","split":"train","duration_seconds":3.1}
+{"audio":"audio/raw/common_voice_fa_512.wav","text":"ممنون از راهنمایی شما","lang":"fa","speaker_id":"common_voice_fa_512","split":"valid","duration_seconds":1.9}

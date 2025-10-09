@@ -1,0 +1,6 @@
+{"audio":"audio/raw/fleurs_fa_001.wav","text":"سلام، امروز هوا چطور است؟","lang":"fa","speaker_id":"fleurs_fa_001","split":"train","duration_seconds":2.3}
+{"audio":"audio/raw/fleurs_fa_002.wav","text":"این یک جمله تستی به زبان فارسی است","lang":"fa","speaker_id":"fleurs_fa_002","split":"train","duration_seconds":3.1}
+{"audio":"audio/raw/fleurs_fa_203.wav","text":"آیا می‌توانید کمکم کنید؟","lang":"fa","speaker_id":"fleurs_fa_203","split":"test","duration_seconds":1.5}
+{"audio":"audio/raw/cvss_fa_047.wav","text":"لطفاً این متن را ترجمه کنید","lang":"fa","speaker_id":"cvss_fa_047","split":"train","duration_seconds":1.8}
+{"audio":"audio/raw/common_voice_fa_128.wav","text":"من به دنبال اطلاعات در مورد هوش مصنوعی هستم","lang":"fa","speaker_id":"common_voice_fa_128","split":"train","duration_seconds":3.1}
+{"audio":"audio/raw/common_voice_fa_512.wav","text":"ممنون از راهنمایی شما","lang":"fa","speaker_id":"common_voice_fa_512","split":"valid","duration_seconds":1.9}
