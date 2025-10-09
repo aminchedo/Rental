@@ -85,7 +85,13 @@ fi
 chk logs/train.log
 chk models/persian-chat
 chk models/persian-chat/config.json
-chk models/persian-chat/pytorch_model.bin || chk models/persian-chat/model.safetensors
+# Check for either pytorch_model.bin or model.safetensors
+if [ -f "models/persian-chat/pytorch_model.bin" ] || [ -f "models/persian-chat/model.safetensors" ]; then
+    grn "OK: models/persian-chat/model.safetensors or pytorch_model.bin"
+else
+    red "MISSING: models/persian-chat/pytorch_model.bin or model.safetensors"
+    exit 1
+fi
 echo ""
 
 # ============================================================================

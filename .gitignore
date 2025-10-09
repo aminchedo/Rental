@@ -35,6 +35,9 @@ Thumbs.db
 logs
 *.log
 
+# Models
+models/
+
 # Runtime data
 pids
 *.pid
